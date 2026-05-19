@@ -26,19 +26,19 @@ namespace Orders.API.Data
                     CREATE TABLE IF NOT EXISTS orders (
                     id             TEXT PRIMARY KEY,
                     usuario_id     TEXT NOT NULL,
-                    total          REAL NOT NULL DEFAULT 0,
-                    estado         TEXT NOT NULL DEFAULT 'Pendiente',
+                    total          REAL NOT NULL, 
+                    estado         TEXT NOT NULL,
                     fecha_creacion TEXT NOT NULL DEFAULT (datetime('now'))
                     );
                     """);
 
             connection.Execute("""
-                    CREATE TABLE IF NOT EXISTS order_items (
-                     id              TEXT PRIMARY KEY,
+                    CREATE TABLE IF NOT EXISTS order_items (                   
                      order_id        TEXT NOT NULL,
                      producto_id     TEXT NOT NULL,
                      cantidad        INTEGER NOT NULL,
                      precio_unitario REAL NOT NULL,
+                     PRIMARY KEY (order_id, producto_id), 
                      FOREIGN KEY (order_id) REFERENCES orders(id)
                     );
                     """);
