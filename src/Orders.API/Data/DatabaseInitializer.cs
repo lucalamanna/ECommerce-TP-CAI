@@ -29,8 +29,8 @@ namespace Orders.API.Data
                     total          REAL NOT NULL DEFAULT 0,
                     estado         TEXT NOT NULL DEFAULT 'Pendiente',
                     fecha_creacion TEXT NOT NULL DEFAULT (datetime('now'))
-                );
-                """);
+                    );
+                    """);
 
             connection.Execute("""
                     CREATE TABLE IF NOT EXISTS order_items (
@@ -40,8 +40,8 @@ namespace Orders.API.Data
                      cantidad        INTEGER NOT NULL,
                      precio_unitario REAL NOT NULL,
                      FOREIGN KEY (order_id) REFERENCES orders(id)
-                );
-                """);
+                    );
+                    """);
 
             _logger.LogInformation("SQLite inicializado correctamente → {db}", connectionString);
         }
