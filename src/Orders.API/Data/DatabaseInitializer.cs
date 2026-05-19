@@ -23,27 +23,28 @@ namespace Orders.API.Data
             connection.Open();
 
             connection.Execute("""
-            CREATE TABLE IF NOT EXISTS orders (
-                id             TEXT PRIMARY KEY,
-                usuario_id     TEXT NOT NULL,
-                total          REAL NOT NULL DEFAULT 0,
-                estado         TEXT NOT NULL DEFAULT 'Pendiente',
-                fecha_creacion TEXT NOT NULL DEFAULT (datetime('now'))
-            );
+                    CREATE TABLE IF NOT EXISTS orders (
+                    id             TEXT PRIMARY KEY,
+                    usuario_id     TEXT NOT NULL,
+                    total          REAL NOT NULL DEFAULT 0,
+                    estado         TEXT NOT NULL DEFAULT 'Pendiente',
+                    fecha_creacion TEXT NOT NULL DEFAULT (datetime('now'))
+                );
+                """);
 
-            CREATE TABLE IF NOT EXISTS order_items (
-                id              TEXT PRIMARY KEY,
-                order_id        TEXT NOT NULL,
-                producto_id     TEXT NOT NULL,
-                cantidad        INTEGER NOT NULL,
-                precio_unitario REAL NOT NULL,
-                FOREIGN KEY (order_id) REFERENCES orders(id)
-            );
-        """);
+            connection.Execute("""
+                    CREATE TABLE IF NOT EXISTS order_items (
+                     id              TEXT PRIMARY KEY,
+                     order_id        TEXT NOT NULL,
+                     producto_id     TEXT NOT NULL,
+                     cantidad        INTEGER NOT NULL,
+                     precio_unitario REAL NOT NULL,
+                     FOREIGN KEY (order_id) REFERENCES orders(id)
+                );
+                """);
 
             _logger.LogInformation("SQLite inicializado correctamente → {db}", connectionString);
         }
-
-    }
+     }
 
  }
