@@ -6,24 +6,16 @@ namespace Products.API.ExceptionHandlers;
 public class BusinessRuleExceptionHandler : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
-        HttpContext context, Exception exception, CancellationToken cancellationToken)
+    HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         if (exception is not BusinessRuleException ex) return false;
-
-        var (statusCode, type, title, detail) = ex.ErrorCode switch
-        {
-            "PRD-003" => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "Ya existe un recurso con esos datos."),
-            "PRD-004" => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede eliminar el recurso."),
-            _ => (409,"https://tools.ietf.org/html/rfc7231#section-6.5.9","Conflict","No se puede procesar la solicitud.")
-        };
-
-        context.Response.StatusCode = statusCode;
+        context.Response.StatusCode = 409;
         await context.Response.WriteAsJsonAsync(new
         {
-            type,
-            title,
-            status = statusCode,
-            detail,
+            type = "https://tools.ietf.org/html/rfc7231#section-6.5.9",
+            title = "Conflict",
+            status = 409,
+            detail = "No se puede procesar la solicitud.",
             instance = context.Request.Path.Value,
             errorCode = ex.ErrorCode,
             errorMessage = ex.Message
