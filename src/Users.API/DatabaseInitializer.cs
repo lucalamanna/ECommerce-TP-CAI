@@ -3,7 +3,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Users.API;
 
-public class DatabaseInitializer(IConfiguration config)
+public class DatabaseInitializer(IConfiguration config, ILogger<DatabaseInitializer> logger)
 {
     public void Initialize()
     {
@@ -23,5 +23,6 @@ public class DatabaseInitializer(IConfiguration config)
                 intentos_fallidos INTEGER NOT NULL DEFAULT 0
             );
         """);
+        logger.LogInformation("SQLite inicializado correctamente → {db}", connectionString);
     }
 }
