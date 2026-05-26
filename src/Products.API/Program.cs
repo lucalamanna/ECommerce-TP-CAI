@@ -3,6 +3,7 @@ using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Products.API.Controllers;
 using Products.API.ExceptionHandlers;
+using Products.API.HealthChecks;
 using Products.API.Services;
 using Serilog;
 using Serilog.Events;
@@ -48,7 +49,9 @@ builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<DatabaseInitializer>();
 builder.Services.AddSingleton<ProductService>();
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<SqliteHealthCheck>("sqlite")
+    .AddCheck<ApiStatusCheck>("api-status");
 builder.Services.AddHealthChecksUI(setup =>
 {
     setup.SetEvaluationTimeInSeconds(600);
