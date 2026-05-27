@@ -21,20 +21,39 @@ public class ProductService(IConfiguration config)
         var sql = "SELECT id AS Id, nombre AS Nombre, descripcion AS Descripcion, precio AS Precio, stock AS Stock, categoria AS Categoria, fecha_creacion AS FechaCreacion FROM products WHERE 1=1";
         if (!string.IsNullOrEmpty(categoria)) sql += " AND categoria = @categoria";
         if (!string.IsNullOrEmpty(nombre)) sql += " AND nombre LIKE @nombre";
-        return await conn.QueryAsync<Product>(sql, new { categoria, nombre = $"%{nombre}%" });
+        var rows = await conn.QueryAsync<dynamic>(sql, new { categoria, nombre = $"%{nombre}%" });
+        return rows.Select(row => new Product
+        {
+            Id = Guid.Parse((string)row.Id),
+            Nombre = (string)row.Nombre,
+            Descripcion = (string)row.Descripcion,
+            Precio = (decimal)(double)row.Precio,
+            Stock = (int)(long)row.Stock,
+            Categoria = (string)row.Categoria,
+            FechaCreacion = DateTime.Parse((string)row.FechaCreacion, null, System.Globalization.DateTimeStyles.RoundtripKind)
+        });
     }
 
     public async Task<Product> GetByIdAsync(Guid id)
     {
         using var conn = CreateConnection();
-        var product = await conn.QueryFirstOrDefaultAsync<Product>(
-            "SELECT id AS Id, nombre AS Nombre, descripcion AS Descripcion, precio AS Precio, stock AS Stock, categoria AS Categoria, fecha_creacion AS FechaCreacion FROM products WHERE id = @id",
-            new { id = id.ToString() });
+        var row = await conn.QueryFirstOrDefaultAsync<dynamic>(
+    "SELECT id AS Id, nombre AS Nombre, descripcion AS Descripcion, precio AS Precio, stock AS Stock, categoria AS Categoria, fecha_creacion AS FechaCreacion FROM products WHERE id = @id",
+    new { id = id.ToString() });
 
-        if (product == null)
+        if (row == null)
             throw new NotFoundException("PRD-001", "Producto no encontrado.");
 
-        return product;
+        return new Product
+        {
+            Id = Guid.Parse((string)row.Id),
+            Nombre = (string)row.Nombre,
+            Descripcion = (string)row.Descripcion,
+            Precio = (decimal)(double)row.Precio,
+            Stock = (int)(long)row.Stock,
+            Categoria = (string)row.Categoria,
+            FechaCreacion = DateTime.Parse((string)row.FechaCreacion, null, System.Globalization.DateTimeStyles.RoundtripKind)
+        };
     }
 
     public async Task<Product> CreateAsync(CreateProductRequest request)
