@@ -91,4 +91,9 @@ app.MapHealthChecks("/health/live", new HealthCheckOptions
 app.MapHealthChecksUI(setup => setup.UIPath = "/health-ui");
 
 app.MapUsersEndpoints();
+
 app.Run();
+
+app.Run();
+
+
