@@ -38,6 +38,12 @@ namespace Orders.API.Controllers
                 var updated = await service.UpdateStatusAsync(id, request);
                 return Results.Ok(updated);
             }).WithTags("Orders");
+
+            app.MapDelete("/api/orders/{id}", async (OrderService service, Guid id) =>
+            {
+                await service.DeleteAsync(id);
+                return Results.NoContent();
+            }).WithTags("Orders");
         }
     }
 }

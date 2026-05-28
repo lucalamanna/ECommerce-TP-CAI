@@ -13,6 +13,11 @@ namespace Orders.API.Extensions
             services.AddScoped<OrderRepository>();
             services.AddScoped<OrderService>();
 
+            services.AddHttpClient("ProductsApi", client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:5097");
+            });
+
             services.AddExceptionHandler<NotFoundExceptionHandler>();
             services.AddExceptionHandler<ValidationExceptionHandler>();
             services.AddExceptionHandler<BusinessRuleExceptionHandler>();

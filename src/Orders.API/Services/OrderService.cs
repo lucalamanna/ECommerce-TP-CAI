@@ -1,21 +1,24 @@
 ﻿using Orders.API.Data;
 using Orders.API.DTOs;
 using Orders.API.Exceptions;
+using Orders.API.Models;
+using System.Net.Http;
 
 namespace Orders.API.Services
 {
     public class OrderService
     {
         private readonly OrderRepository _repository;
+        private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<OrderService> _logger;
 
-        public OrderService (OrderRepository repository, ILogger<OrderService> logger)
+        public OrderService (OrderRepository repository, IHttpClientFactory httpClientFactory, ILogger<OrderService> logger)
         {
             _repository = repository;
+            _httpClientFactory = httpClientFactory;
             _logger = logger;
         }
-
-        // --- GET ALL ---
+       
         public async Task<IEnumerable<OrderResponse>> GetAllAsync(Guid? usuarioId)
         {
             _logger.LogDebug("Obteniendo órdenes. UsuarioId: {UsuarioId}", usuarioId);
@@ -39,8 +42,7 @@ namespace Orders.API.Services
                 FechaCreacion = o.FechaCreacion
             });
         }
-
-        // --- GET BY ID ---
+       
         public async Task<OrderResponse> GetByIdAsync(Guid id)
         {
             _logger.LogDebug("Obteniendo orden. Id: {Id}", id);
@@ -71,8 +73,7 @@ namespace Orders.API.Services
                 FechaCreacion = order.FechaCreacion
             };
         }
-
-        // --- UPDATE STATUS ---
+      
         public async Task<UpdateOrderStatusResponse> UpdateStatusAsync(Guid id, UpdateOrderStatusRequest request)
         {
             _logger.LogDebug("Actualizando estado. Id: {Id}, Estado: {Estado}", id, request.Estado);
@@ -114,5 +115,86 @@ namespace Orders.API.Services
                 FechaActualizacion = DateTime.UtcNow
             };
         }
+
+        
+        public async Task<OrderResponse> CreateAsync(CreateOrderRequest request)
+        {
+            
+            if (request.Items == null || !request.Items.Any() || request.Items.Any(i => i.Cantidad <= 0))
+                throw new ValidationException("ORD-002", "Los datos de la orden son inválidos.");
+
+            var client = _httpClientFactory.CreateClient("ProductsApi");
+            var items = new List<OrderItem>();
+            decimal total = 0;
+
+          
+            foreach (var itemRequest in request.Items)
+            {
+                var response = await client.GetAsync($"/api/products/{itemRequest.ProductoId}");
+
+               
+                if (!response.IsSuccessStatusCode)
+                    throw new NotFoundException("ORD-004", $"Producto '{itemRequest.ProductoId}' no encontrado.");
+
+                var product = await response.Content.ReadFromJsonAsync<ProductResponse>();
+
+               
+                if (product!.Stock < itemRequest.Cantidad)
+                    throw new BusinessRuleException("ORD-005",
+                        $"Stock insuficiente para '{product.Nombre}'. Disponible: {product.Stock}, solicitado: {itemRequest.Cantidad}.");
+
+                items.Add(new OrderItem
+                {
+                    ProductoId = product.Id,
+                    Cantidad = itemRequest.Cantidad,
+                    PrecioUnitario = product.Precio
+                });
+
+                total += itemRequest.Cantidad * product.Precio;
+            }
+           
+            var order = new Order
+            {
+                Id = Guid.NewGuid(),
+                UsuarioId = request.UsuarioId,
+                Items = items,
+                Total = total,
+                Estado = "Pendiente",
+                FechaCreacion = DateTime.UtcNow
+            };
+
+            var created = await _repository.CreateAsync(order);
+
+            return new OrderResponse
+            {
+                Id = created.Id,
+                UsuarioId = created.UsuarioId,
+                Items = created.Items.Select(i => new OrderItemResponse
+                {
+                    ProductoId = i.ProductoId,
+                    Cantidad = i.Cantidad,
+                    PrecioUnitario = i.PrecioUnitario
+                }).ToList(),
+                Total = created.Total,
+                Estado = created.Estado,
+                FechaCreacion = created.FechaCreacion
+            };
+        }
+
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            var order = await _repository.GetByIdAsync(id);
+
+            if (order == null)
+                throw new NotFoundException("ORD-001", "Orden no encontrada.");
+
+            if (order.Estado != "Cancelada")
+                throw new BusinessRuleException("ORD-008",
+                    "Solo se pueden eliminar órdenes en estado 'Cancelada'.");
+
+            return await _repository.DeleteAsync(id);
+        }
+
+
     }
 }
