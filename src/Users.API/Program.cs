@@ -7,6 +7,7 @@ using Users.API.Controllers;
 using Users.API.ExceptionHandlers;
 using Users.API.HealthChecks;
 using Users.API.Services;
+using Users.API.Middleware;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -68,6 +69,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 app.UseSerilogRequestLogging(options =>
 {

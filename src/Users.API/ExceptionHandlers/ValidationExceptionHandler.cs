@@ -9,6 +9,9 @@ public class ValidationExceptionHandler : IExceptionHandler
         HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         if (exception is not ValidationException ex) return false;
+
+        var correlationId = context.Items["X-Correlation-Id"]?.ToString() ?? string.Empty;
+
         context.Response.StatusCode = 400;
         await context.Response.WriteAsJsonAsync(new
         {
@@ -18,7 +21,8 @@ public class ValidationExceptionHandler : IExceptionHandler
             detail = "Los datos enviados no son válidos.",
             instance = context.Request.Path.Value,
             errorCode = ex.ErrorCode,
-            errorMessage = ex.Message
+            errorMessage = ex.Message,
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }
