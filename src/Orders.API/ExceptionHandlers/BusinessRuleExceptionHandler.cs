@@ -15,6 +15,7 @@ namespace Orders.API.ExceptionHandlers
             {
                 "ORD-005" => (422, "https://tools.ietf.org/html/rfc4918#section-11.2", "Unprocessable Entity", "No se puede procesar la solicitud."),
                 "ORD-006" => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede modificar el estado."),
+                "ORD-008" => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede eliminar la orden."),
                 _ => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede procesar la solicitud.")
             };
 

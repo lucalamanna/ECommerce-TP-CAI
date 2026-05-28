@@ -113,5 +113,23 @@ namespace Orders.API.Data
 
             return await GetByIdAsync(id);
         }
+
+        //DELETE 
+        public async Task<bool> DeleteAsync(Guid id)
+        {
+            using var conn = CreateConnection();
+
+            await conn.ExecuteAsync("""
+        DELETE FROM order_items
+        WHERE order_id = @Id
+        """, new { Id = id.ToString() });
+
+            var rows = await conn.ExecuteAsync("""
+        DELETE FROM orders
+        WHERE id = @Id
+        """, new { Id = id.ToString() });
+
+            return rows > 0;
+        }
     }
 }
