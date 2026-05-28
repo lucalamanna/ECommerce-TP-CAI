@@ -7,6 +7,13 @@ public static class UsersEndpoints
 {
     public static void MapUsersEndpoints(this WebApplication app)
     {
+        app.MapGet("/api/users", async (UserService service, string? id, string? email, string? nombre, string? apellido) =>
+        {
+            var users = await service.GetAllAsync(id, email, nombre, apellido);
+            return Results.Ok(users);
+        })
+        .WithTags("Users");
+
         app.MapPost("/api/users/register", async (UserService service, RegisterRequest request) =>
         {
             var user = await service.RegisterAsync(request);
