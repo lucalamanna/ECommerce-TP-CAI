@@ -9,6 +9,9 @@ public class NotFoundExceptionHandler : IExceptionHandler
         HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         if (exception is not NotFoundException ex) return false;
+
+        var correlationId = context.Items["X-Correlation-Id"]?.ToString() ?? string.Empty;
+
         context.Response.StatusCode = 404;
         await context.Response.WriteAsJsonAsync(new
         {
@@ -18,7 +21,8 @@ public class NotFoundExceptionHandler : IExceptionHandler
             detail = "El recurso solicitado no fue encontrado.",
             instance = context.Request.Path.Value,
             errorCode = ex.ErrorCode,
-            errorMessage = ex.Message
+            errorMessage = ex.Message,
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }
