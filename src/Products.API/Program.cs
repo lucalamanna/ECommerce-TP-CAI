@@ -1,3 +1,4 @@
+using Products.API.Data;
 using Products.API.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,7 +8,7 @@ builder.Services.AddAppServices();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
-    scope.ServiceProvider.GetRequiredService<Products.API.Services.DatabaseInitializer>().Initialize();
+    scope.ServiceProvider.GetRequiredService<DatabaseInitializer>().Initialize();
 
 app.UseAppMiddleware();
 
