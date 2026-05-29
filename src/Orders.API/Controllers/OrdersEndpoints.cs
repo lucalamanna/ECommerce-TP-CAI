@@ -1,6 +1,6 @@
 ﻿using Orders.API.DTOs;
 using Orders.API.Services;
-using static System.Net.WebRequestMethods;
+
 
 namespace Orders.API.Controllers
 {
@@ -26,7 +26,7 @@ namespace Orders.API.Controllers
             app.MapPost("/api/orders", async (OrderService service, CreateOrderRequest request, HttpContext http) =>
             {
                 var correlationId = http.Items["CorrelationId"]?.ToString();
-                var order = await service.CreateAsync(request);
+                var order = await service.CreateAsync(request, correlationId);
                 return Results.Created($"/api/orders/{order.Id}", order);
             }).WithTags("Orders");
 
