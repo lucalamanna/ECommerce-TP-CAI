@@ -21,7 +21,7 @@ namespace Orders.API.Services
        
         public async Task<IEnumerable<OrderResponse>> GetAllAsync(Guid? usuarioId, Guid? productoId = null)
         {
-            _logger.LogDebug("Obteniendo órdenes. UsuarioId: {UsuarioId}, usuarioId, ProductoId: { ProductoId}");
+            _logger.LogDebug("Obteniendo órdenes. UsuarioId: {UsuarioId}, ProductoId: {ProductoId}", usuarioId, productoId);
             
             var orders = await _repository.GetAllAsync(usuarioId, productoId);
 
