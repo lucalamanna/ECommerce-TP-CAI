@@ -16,6 +16,7 @@ public static class MiddlewareExtensions
             app.UseSwaggerUI();
         }
 
+        app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseMiddleware<AuditMiddleware>();
         app.UseSerilogRequestLogging(options =>
         {
