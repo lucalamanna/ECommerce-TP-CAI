@@ -1,5 +1,6 @@
 ﻿using Products.API.ExceptionHandlers;
 using Products.API.HealthChecks;
+using Products.API.Data;
 using Products.API.Services;
 
 namespace Products.API.Extensions;
@@ -18,7 +19,7 @@ public static class ServicesExtensions
         services.AddProblemDetails();
 
         services.AddSingleton<DatabaseInitializer>();
-        services.AddSingleton<ProductService>();
+        services.AddScoped<ProductService>();
 
         services.AddHealthChecks()
             .AddCheck<SqliteHealthCheck>("sqlite-db", tags: ["database"])

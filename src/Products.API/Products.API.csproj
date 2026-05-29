@@ -24,7 +24,8 @@
     <Folder Include="DTOs\" />
     <Folder Include="Exceptions\" />
     <Folder Include="ExceptionHandlers\" />
-    <Folder Include="Services\" />
+	<Folder Include="Data\" />
+	<Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
