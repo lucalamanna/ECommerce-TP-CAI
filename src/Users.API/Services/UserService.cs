@@ -15,6 +15,40 @@ public class UserService(IConfiguration config)
         return new SqliteConnection(connectionString);
     }
 
+    public async Task<IEnumerable<UserResponse>> GetAllAsync(string? id, string? email, string? nombre, string? apellido)
+    {
+        using var conn = CreateConnection();
+
+        var sql = """
+            SELECT id AS Id, nombre AS Nombre, apellido AS Apellido, email AS Email,
+                   fecha_registro AS FechaRegistro, activo AS Activo
+            FROM users WHERE 1=1
+            """;
+
+        if (!string.IsNullOrEmpty(id)) sql += " AND id = @id";
+        if (!string.IsNullOrEmpty(email)) sql += " AND email LIKE @email";
+        if (!string.IsNullOrEmpty(nombre)) sql += " AND nombre LIKE @nombre";
+        if (!string.IsNullOrEmpty(apellido)) sql += " AND apellido LIKE @apellido";
+
+        var rows = await conn.QueryAsync<dynamic>(sql, new
+        {
+            id,
+            email = $"%{email}%",
+            nombre = $"%{nombre}%",
+            apellido = $"%{apellido}%"
+        });
+
+        return rows.Select(row => new UserResponse
+        {
+            Id = Guid.Parse((string)row.Id),
+            Nombre = (string)row.Nombre,
+            Apellido = (string)row.Apellido,
+            Email = (string)row.Email,
+            FechaRegistro = DateTime.Parse((string)row.FechaRegistro, null, System.Globalization.DateTimeStyles.RoundtripKind),
+            Activo = (long)row.Activo == 1
+        });
+    }
+
     public async Task<UserResponse> RegisterAsync(RegisterRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Nombre) ||

@@ -58,6 +58,14 @@ public class ProductService(IConfiguration config)
 
     public async Task<Product> CreateAsync(CreateProductRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Nombre) ||
+         request.Nombre.Length > 100 ||                    
+        (request.Descripcion != null && request.Descripcion.Length > 500) || 
+         string.IsNullOrWhiteSpace(request.Categoria) ||
+         request.Precio <= 0 ||
+         request.Stock < 0)
+            throw new ValidationException("PRD-002", "Los datos del producto son inválidos.");
+
         using var conn = CreateConnection();
 
         var exists = await conn.QueryFirstOrDefaultAsync<int>(
@@ -79,6 +87,14 @@ public class ProductService(IConfiguration config)
 
     public async Task<Product> UpdateAsync(Guid id, UpdateProductRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Nombre) ||
+     request.Nombre.Length > 100 ||                    
+     (request.Descripcion != null && request.Descripcion.Length > 500) || 
+     string.IsNullOrWhiteSpace(request.Categoria) ||
+     request.Precio <= 0 ||
+     request.Stock < 0)
+            throw new ValidationException("PRD-002", "Los datos del producto son inválidos.");
+
         await GetByIdAsync(id);
 
         using var conn = CreateConnection();

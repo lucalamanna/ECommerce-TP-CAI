@@ -1,11 +1,13 @@
-using Users.API;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Users.API.Controllers;
-using Users.API.ExceptionHandlers;
-using Users.API.Services;
 using Serilog;
 using Serilog.Events;
+using Users.API;
+using Users.API.Controllers;
+using Users.API.ExceptionHandlers;
+using Users.API.HealthChecks;
+using Users.API.Services;
+using Users.API.Middleware;
 
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Information()
@@ -48,7 +50,9 @@ builder.Services.AddProblemDetails();
 builder.Services.AddSingleton<DatabaseInitializer>();
 builder.Services.AddSingleton<UserService>();
 
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks()
+    .AddCheck<SqliteHealthCheck>("sqlite-db", tags: ["database"])
+    .AddCheck<ApiStatusCheck>("api-status", tags: ["api"]);
 builder.Services.AddHealthChecksUI(setup =>
 {
     setup.SetEvaluationTimeInSeconds(600);
@@ -65,6 +69,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 app.UseSerilogRequestLogging(options =>
 {
