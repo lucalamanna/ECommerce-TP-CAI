@@ -25,7 +25,16 @@ namespace Orders.API.Extensions
             services.AddProblemDetails();
 
             services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
+            
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+                {
+                    Title = "Orders API",
+                    Version = "v1",
+                    Description = "API de gestión de órdenes del eCommerce."
+                });
+            });
 
             services.AddHealthChecks()
                 .AddCheck<SqliteHealthCheck>("sqlite-db", tags: ["database"])
