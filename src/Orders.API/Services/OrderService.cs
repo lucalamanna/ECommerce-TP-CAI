@@ -117,13 +117,23 @@ namespace Orders.API.Services
         }
 
         
-        public async Task<OrderResponse> CreateAsync(CreateOrderRequest request)
+        public async Task<OrderResponse> CreateAsync(CreateOrderRequest request, string? correlationId)
         {
-            
+
+            _logger.LogDebug("Creando orden. UsuarioId: {UsuarioId}, Items: {Cantidad}",
+            request.UsuarioId, request.Items?.Count ?? 0);
+
             if (request.Items == null || !request.Items.Any() || request.Items.Any(i => i.Cantidad <= 0))
+            {
+                _logger.LogWarning("Datos inválidos. ErrorCode: ORD-002, UsuarioId: {UsuarioId}", request.UsuarioId);
                 throw new ValidationException("ORD-002", "Los datos de la orden son inválidos.");
+            } 
 
             var client = _httpClientFactory.CreateClient("ProductsApi");
+            
+            if (!string.IsNullOrWhiteSpace(correlationId))
+                client.DefaultRequestHeaders.Add("X-Correlation-Id", correlationId);
+            
             var items = new List<OrderItem>();
             decimal total = 0;
 
@@ -134,14 +144,23 @@ namespace Orders.API.Services
 
                
                 if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogWarning("Producto no encontrado. ErrorCode: ORD-004, ProductoId: {ProductoId}", itemRequest.ProductoId);
                     throw new NotFoundException("ORD-004", $"Producto '{itemRequest.ProductoId}' no encontrado.");
+                }
+                   
 
                 var product = await response.Content.ReadFromJsonAsync<ProductResponse>();
 
                
                 if (product!.Stock < itemRequest.Cantidad)
+                {
+                    _logger.LogWarning("Stock insuficiente. ErrorCode: ORD-005, ProductoId: {ProductoId}, Disponible: {Stock}, Solicitado: {Cant}",
+                        product.Id, product.Stock, itemRequest.Cantidad);
                     throw new BusinessRuleException("ORD-005",
                         $"Stock insuficiente para '{product.Nombre}'. Disponible: {product.Stock}, solicitado: {itemRequest.Cantidad}.");
+
+                }
 
                 items.Add(new OrderItem
                 {
@@ -164,6 +183,7 @@ namespace Orders.API.Services
             };
 
             var created = await _repository.CreateAsync(order);
+            _logger.LogDebug("Orden creada. Id: {Id}, Total: {Total}", created.Id, created.Total);
 
             return new OrderResponse
             {
@@ -183,15 +203,23 @@ namespace Orders.API.Services
 
         public async Task<bool> DeleteAsync(Guid id)
         {
+            _logger.LogDebug("Eliminando orden. Id: {Id}", id);
             var order = await _repository.GetByIdAsync(id);
 
             if (order == null)
+            {
+                _logger.LogWarning("Orden no encontrada. ErrorCode: ORD-001, Id: {Id}", id);
                 throw new NotFoundException("ORD-001", "Orden no encontrada.");
+            }
+               
 
             if (order.Estado != "Cancelada")
-                throw new BusinessRuleException("ORD-008",
-                    "Solo se pueden eliminar órdenes en estado 'Cancelada'.");
+            {
+                _logger.LogWarning("Eliminación no permitida. ErrorCode: ORD-008, Estado: {Estado}, Id: {Id}", order.Estado, id);
+                throw new BusinessRuleException("ORD-008", "Solo se pueden eliminar órdenes en estado 'Cancelada'.");
+            }
 
+            _logger.LogDebug("Orden eliminada. Id: {Id}", id);
             return await _repository.DeleteAsync(id);
         }
 

@@ -6,10 +6,11 @@ namespace Orders.API.ExceptionHandlers
     public class ValidationExceptionHandler : IExceptionHandler
     {
         public async ValueTask<bool> TryHandleAsync(
-        HttpContext context, Exception exception,
-        CancellationToken cancellationToken)
+        HttpContext context, Exception exception, CancellationToken cancellationToken)
         {
             if (exception is not ValidationException ex) return false;
+
+            var correlationId = context.Items["CorrelationId"]?.ToString();
 
             context.Response.StatusCode = 400;
             await context.Response.WriteAsJsonAsync(new
@@ -20,7 +21,8 @@ namespace Orders.API.ExceptionHandlers
                 detail = "Los datos de la orden son inválidos.",
                 instance = context.Request.Path.Value,
                 errorCode = ex.ErrorCode,
-                errorMessage = ex.Message
+                errorMessage = ex.Message,
+                correlationId
             }, cancellationToken: cancellationToken);
 
             return true;
