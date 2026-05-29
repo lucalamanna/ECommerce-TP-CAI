@@ -15,17 +15,21 @@ namespace Orders.API.Data
             new(_config.GetConnectionString("DefaultConnection") ?? "Data Source=app.db");
 
         // --- GET ALL ---
-        public async Task<IEnumerable<Order>> GetAllAsync(Guid? usuarioId)
+        public async Task<IEnumerable<Order>> GetAllAsync(Guid? usuarioId, Guid? productoId)
         {       
             using var conn = CreateConnection();
 
                 var orders = await conn.QueryAsync<Order>("""
                 SELECT id AS Id, usuario_id AS UsuarioId, total AS Total,
                 estado AS Estado, fecha_creacion AS FechaCreacion
-                FROM orders
+                FROM orders o
                 WHERE (@UsuarioId IS NULL OR usuario_id = @UsuarioId)
+                    AND (@ProductoId IS NULL OR EXISTS (
+                SELECT 1 FROM order_items oi
+                WHERE oi.order_id = o.id AND oi.producto_id = @ProductoId ))
                 ORDER BY fecha_creacion DESC
-                """, new { UsuarioId = usuarioId?.ToString() });
+                """, new { UsuarioId = usuarioId?.ToString(), 
+                    ProductoId = productoId?.ToString() });
 
             foreach (var order in orders)
             {
