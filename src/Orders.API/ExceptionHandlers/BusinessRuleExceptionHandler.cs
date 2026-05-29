@@ -6,8 +6,7 @@ namespace Orders.API.ExceptionHandlers
     public class BusinessRuleExceptionHandler : IExceptionHandler
     {
         public async ValueTask<bool> TryHandleAsync(
-       HttpContext context, Exception exception,
-       CancellationToken cancellationToken)
+       HttpContext context, Exception exception, CancellationToken cancellationToken)
         {
             if (exception is not BusinessRuleException ex) return false;
 
@@ -18,7 +17,9 @@ namespace Orders.API.ExceptionHandlers
                 "ORD-008" => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede eliminar la orden."),
                 _ => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede procesar la solicitud.")
             };
-
+            
+            var correlationId = context.Items["CorrelationId"]?.ToString();
+            
             context.Response.StatusCode = status;
             await context.Response.WriteAsJsonAsync(new
             {
@@ -28,7 +29,8 @@ namespace Orders.API.ExceptionHandlers
                 detail,
                 instance = context.Request.Path.Value,
                 errorCode = ex.ErrorCode,
-                errorMessage = ex.Message
+                errorMessage = ex.Message,
+                correlationId
             }, cancellationToken: cancellationToken);
 
             return true;

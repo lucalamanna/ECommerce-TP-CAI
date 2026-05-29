@@ -5,10 +5,15 @@ namespace Orders.API.ExceptionHandlers
 {
     public class GlobalExceptionHandler : IExceptionHandler
     {
+        private readonly ILogger<GlobalExceptionHandler> _logger;
+        public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) => _logger = logger;
         public async ValueTask<bool> TryHandleAsync(
-        HttpContext context, Exception exception,
-        CancellationToken cancellationToken)
+        HttpContext context, Exception exception, CancellationToken cancellationToken)
         {
+            var correlationId = context.Items["CorrelationId"]?.ToString();
+            _logger.LogError(exception,
+               "Error inesperado. {ErrorCode}, CorrelationId: {CorrelationId}", "ORD-007", correlationId);
+
             context.Response.StatusCode = 500;
             await context.Response.WriteAsJsonAsync(new
             {
@@ -18,7 +23,8 @@ namespace Orders.API.ExceptionHandlers
                 detail = "Ocurrió un error inesperado.",
                 instance = context.Request.Path.Value,
                 errorCode = "ORD-007",
-                errorMessage = "Error interno al procesar la orden."
+                errorMessage = "Error interno al procesar la orden.",
+                correlationId
             }, cancellationToken: cancellationToken);
 
             return true;
