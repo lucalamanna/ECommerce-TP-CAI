@@ -3,10 +3,11 @@ using Dapper;
 using Products.API.Models;
 using Products.API.DTOs;
 using Products.API.Exceptions;
+using System.Net.Http.Json;
 
 namespace Products.API.Services;
 
-public class ProductService(IConfiguration config)
+public class ProductService(IConfiguration config, IHttpClientFactory httpClientFactory)
 {
     private SqliteConnection CreateConnection()
     {
@@ -107,7 +108,25 @@ public class ProductService(IConfiguration config)
 
     public async Task DeleteAsync(Guid id)
     {
+        // Verificar que el producto existe
         await GetByIdAsync(id);
+
+        // Verificar si tiene órdenes activas en Orders.API
+        var client = httpClientFactory.CreateClient("OrdersApi");
+        var response = await client.GetAsync($"/api/orders?productoId={id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var orders = await response.Content.ReadFromJsonAsync<IEnumerable<OrderSummary>>();
+            var ordenesActivas = orders?.Where(o =>
+                o.Estado == "Pendiente" ||
+                o.Estado == "Confirmada" ||
+                o.Estado == "Enviada").ToList();
+
+            if (ordenesActivas != null && ordenesActivas.Any())
+                throw new BusinessRuleException("PRD-004",
+                    "El producto tiene órdenes activas y no puede eliminarse.");
+        }
 
         using var conn = CreateConnection();
         await conn.ExecuteAsync(

@@ -22,6 +22,11 @@ public static class ServicesExtensions
         services.AddSingleton<DatabaseInitializer>();
         services.AddScoped<ProductService>();
 
+        services.AddHttpClient("OrdersApi", client =>
+        {
+            client.BaseAddress = new Uri("http://localhost:5095");
+        });
+
         services.AddHealthChecks()
             .AddCheck<SqliteHealthCheck>("sqlite-db", tags: ["database"])
             .AddCheck<ApiStatusCheck>("api-status", tags: ["api"]);
