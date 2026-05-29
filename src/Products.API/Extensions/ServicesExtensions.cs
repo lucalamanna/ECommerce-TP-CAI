@@ -1,7 +1,8 @@
-﻿using Products.API.ExceptionHandlers;
+﻿using Products.API.Data;
+using Products.API.ExceptionHandlers;
 using Products.API.HealthChecks;
-using Products.API.Data;
 using Products.API.Services;
+using System.Reflection;
 
 namespace Products.API.Extensions;
 
@@ -30,6 +31,13 @@ public static class ServicesExtensions
             setup.SetEvaluationTimeInSeconds(600);
             setup.AddHealthCheckEndpoint("Products.API", "/health");
         }).AddInMemoryStorage();
+
+        services.AddSwaggerGen(c =>
+        {
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            c.IncludeXmlComments(xmlPath);
+        });
 
         return services;
     }
