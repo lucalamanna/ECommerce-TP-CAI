@@ -1,22 +1,22 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Products.API.Exceptions;
 
-namespace Products.API.ExceptionHandlers;
-
-public class BusinessRuleExceptionHandler : IExceptionHandler
+public class BusinessRuleExceptionHandler(ILogger<BusinessRuleExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
         HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         if (exception is not BusinessRuleException ex) return false;
 
+        logger.LogWarning("Regla de negocio violada. ErrorCode: {ErrorCode}, Message: {Message}, Path: {Path}",
+            ex.ErrorCode, ex.Message, context.Request.Path);
+
         var (statusCode, type, title, detail) = ex.ErrorCode switch
         {
             "PRD-003" => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "Ya existe un recurso con esos datos."),
             "PRD-004" => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede eliminar el recurso."),
-            _ => (409,"https://tools.ietf.org/html/rfc7231#section-6.5.9","Conflict","No se puede procesar la solicitud.")
+            _ => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede procesar la solicitud.")
         };
-
         context.Response.StatusCode = statusCode;
         await context.Response.WriteAsJsonAsync(new
         {
