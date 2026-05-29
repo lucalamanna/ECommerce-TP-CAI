@@ -9,9 +9,9 @@ namespace Orders.API.Controllers
         public static void MapOrdersEndpoints(this WebApplication app)
         {
             
-            app.MapGet("/api/orders", async (OrderService service, Guid? usuarioId) =>
+            app.MapGet("/api/orders", async (OrderService service, Guid? usuarioId, Guid? productoId) =>
             {
-                var orders = await service.GetAllAsync(usuarioId);
+                var orders = await service.GetAllAsync(usuarioId, productoId);
                 return Results.Ok(orders);
             }).WithTags("Orders");
 

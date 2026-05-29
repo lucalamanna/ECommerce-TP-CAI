@@ -19,11 +19,11 @@ namespace Orders.API.Services
             _logger = logger;
         }
        
-        public async Task<IEnumerable<OrderResponse>> GetAllAsync(Guid? usuarioId)
+        public async Task<IEnumerable<OrderResponse>> GetAllAsync(Guid? usuarioId, Guid? productoId = null)
         {
-            _logger.LogDebug("Obteniendo órdenes. UsuarioId: {UsuarioId}", usuarioId);
+            _logger.LogDebug("Obteniendo órdenes. UsuarioId: {UsuarioId}, usuarioId, ProductoId: { ProductoId}");
             
-            var orders = await _repository.GetAllAsync(usuarioId);
+            var orders = await _repository.GetAllAsync(usuarioId, productoId);
 
             _logger.LogDebug("Órdenes obtenidas. Cantidad: {Cantidad}", orders.Count());
             
