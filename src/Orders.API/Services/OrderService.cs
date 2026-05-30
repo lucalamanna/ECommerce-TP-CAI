@@ -21,11 +21,11 @@ namespace Orders.API.Services
        
         public async Task<IEnumerable<OrderResponse>> GetAllAsync(Guid? usuarioId, Guid? productoId = null)
         {
-            _logger.LogDebug("Obteniendo órdenes. UsuarioId: {UsuarioId}, ProductoId: {ProductoId}", usuarioId, productoId);
+            _logger.LogInformation("Obteniendo órdenes. UsuarioId: {UsuarioId}, ProductoId: {ProductoId}", usuarioId, productoId);
             
             var orders = await _repository.GetAllAsync(usuarioId, productoId);
 
-            _logger.LogDebug("Órdenes obtenidas. Cantidad: {Cantidad}", orders.Count());
+            _logger.LogInformation("Órdenes obtenidas. Cantidad: {Cantidad}", orders.Count());
             
             return orders.Select(o => new OrderResponse
             {
@@ -45,7 +45,7 @@ namespace Orders.API.Services
        
         public async Task<OrderResponse> GetByIdAsync(Guid id)
         {
-            _logger.LogDebug("Obteniendo orden. Id: {Id}", id);
+            _logger.LogInformation("Obteniendo orden. Id: {Id}", id);
 
             var order = await _repository.GetByIdAsync(id);
 
@@ -56,7 +56,7 @@ namespace Orders.API.Services
                 throw new NotFoundException("ORD-001", "Orden no encontrada.");
             }
 
-            _logger.LogDebug("Orden encontrada. Id: {Id}, Estado: {Estado}", order.Id, order.Estado);
+            _logger.LogInformation("Orden encontrada. Id: {Id}, Estado: {Estado}", order.Id, order.Estado);
 
             return new OrderResponse
             {
@@ -76,7 +76,7 @@ namespace Orders.API.Services
       
         public async Task<UpdateOrderStatusResponse> UpdateStatusAsync(Guid id, UpdateOrderStatusRequest request)
         {
-            _logger.LogDebug("Actualizando estado. Id: {Id}, Estado: {Estado}", id, request.Estado);
+            _logger.LogInformation("Actualizando estado. Id: {Id}, Estado: {Estado}", id, request.Estado);
             
             var order = await _repository.GetByIdAsync(id);
 
@@ -106,7 +106,7 @@ namespace Orders.API.Services
 
             var updated = await _repository.UpdateStatusAsync(id, request.Estado);
             
-            _logger.LogDebug("Estado actualizado. Id: {Id}, Estado: {Estado}", id, request.Estado);
+            _logger.LogInformation("Estado actualizado. Id: {Id}, Estado: {Estado}", id, request.Estado);
 
             return new UpdateOrderStatusResponse
             {
@@ -120,7 +120,7 @@ namespace Orders.API.Services
         public async Task<OrderResponse> CreateAsync(CreateOrderRequest request, string? correlationId)
         {
 
-            _logger.LogDebug("Creando orden. UsuarioId: {UsuarioId}, Items: {Cantidad}",
+            _logger.LogInformation("Creando orden. UsuarioId: {UsuarioId}, Items: {Cantidad}",
             request.UsuarioId, request.Items?.Count ?? 0);
 
             if (request.Items == null || !request.Items.Any() || request.Items.Any(i => i.Cantidad <= 0))
@@ -183,7 +183,7 @@ namespace Orders.API.Services
             };
 
             var created = await _repository.CreateAsync(order);
-            _logger.LogDebug("Orden creada. Id: {Id}, Total: {Total}", created.Id, created.Total);
+            _logger.LogInformation("Orden creada. Id: {Id}, Total: {Total}", created.Id, created.Total);
 
             return new OrderResponse
             {
