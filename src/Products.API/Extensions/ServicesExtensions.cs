@@ -11,7 +11,6 @@ public static class ServicesExtensions
     public static IServiceCollection AddAppServices(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
 
         services.AddExceptionHandler<NotFoundExceptionHandler>();
         services.AddExceptionHandler<BusinessRuleExceptionHandler>();
