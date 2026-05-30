@@ -24,7 +24,7 @@ public static class ServicesExtensions
 
         services.AddHttpClient("OrdersApi", client =>
         {
-            client.BaseAddress = new Uri("https://localhost:7042");
+            client.BaseAddress = new Uri("https://localhost:5300");
         });
 
         services.AddHealthChecks()

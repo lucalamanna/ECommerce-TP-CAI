@@ -3,7 +3,6 @@ using Dapper;
 using Products.API.Models;
 using Products.API.DTOs;
 using Products.API.Exceptions;
-using System.Net.Http.Json;
 
 namespace Products.API.Services;
 
