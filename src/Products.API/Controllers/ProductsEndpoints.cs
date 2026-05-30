@@ -13,9 +13,11 @@ public static class ProductsEndpoints
             var products = await service.GetAllAsync(categoria, nombre);
             return Results.Ok(products);
         })
-        .WithTags("Products")
-        .Produces<IEnumerable<Product>>(200)
-        .Produces<ErrorResponse>(500);
+.WithTags("Products")
+.WithSummary("Listar productos")
+.WithDescription("Retorna todos los productos. Se puede filtrar por categoría y/o nombre.")
+.Produces<IEnumerable<Product>>(200)
+.Produces<ErrorResponse>(500);
 
         app.MapGet("/api/products/{id}", async (ProductService service, Guid id) =>
         {
@@ -23,6 +25,8 @@ public static class ProductsEndpoints
             return Results.Ok(product);
         })
         .WithTags("Products")
+        .WithSummary("Obtener producto por ID")
+        .WithDescription("Retorna un producto específico según su identificador único.")
         .Produces<Product>(200)
         .Produces<ErrorResponse>(404)
         .Produces<ErrorResponse>(500);
@@ -33,6 +37,8 @@ public static class ProductsEndpoints
             return Results.Created($"/api/products/{product.Id}", product);
         })
         .WithTags("Products")
+        .WithSummary("Crear producto")
+        .WithDescription("Crea un nuevo producto en el catálogo.")
         .Produces<Product>(201)
         .Produces<ErrorResponse>(400)
         .Produces<ErrorResponse>(409)
@@ -44,6 +50,8 @@ public static class ProductsEndpoints
             return Results.Ok(product);
         })
         .WithTags("Products")
+        .WithSummary("Actualizar producto")
+        .WithDescription("Actualiza los datos de un producto existente.")
         .Produces<Product>(200)
         .Produces<ErrorResponse>(400)
         .Produces<ErrorResponse>(404)
@@ -55,6 +63,8 @@ public static class ProductsEndpoints
             return Results.NoContent();
         })
         .WithTags("Products")
+        .WithSummary("Eliminar producto")
+        .WithDescription("Elimina un producto del catálogo. No se puede eliminar si tiene órdenes activas.")
         .Produces(204)
         .Produces<ErrorResponse>(404)
         .Produces<ErrorResponse>(409)

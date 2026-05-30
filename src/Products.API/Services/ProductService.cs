@@ -120,8 +120,7 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
             var orders = await response.Content.ReadFromJsonAsync<IEnumerable<OrderSummary>>();
             var ordenesActivas = orders?.Where(o =>
                 o.Estado == "Pendiente" ||
-                o.Estado == "Confirmada" ||
-                o.Estado == "Enviada").ToList();
+                o.Estado == "Confirmada").ToList();
 
             if (ordenesActivas != null && ordenesActivas.Any())
                 throw new BusinessRuleException("PRD-004",
