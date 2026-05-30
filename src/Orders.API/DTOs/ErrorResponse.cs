@@ -1,10 +1,9 @@
 ﻿namespace Orders.API.DTOs
 {
-    public class APIErrorResponse
+    /// <summary>Respuesta de error estándar de la API.</summary>
+    public class ErrorResponse
     {
-        /// <summary>Respuesta de error estándar de la API.</summary>
-        public class ErrorResponse
-        {
+                  
             /// <summary>URI que identifica el tipo de error según RFC.</summary>
             /// <example>https://tools.ietf.org/html/rfc7231#section-6.5.4</example>
             public string Type { get; set; } = string.Empty;
@@ -36,6 +35,6 @@
             /// <summary>Identificador único del request para trazabilidad.</summary>
             /// <example>8f2c1a9e-4b3d-4562-b3fc-2c963f66afa6</example>
             public string? CorrelationId { get; set; }
-        }
+        
     }
 }
