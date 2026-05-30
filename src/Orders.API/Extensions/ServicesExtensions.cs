@@ -2,6 +2,7 @@
 using Orders.API.ExceptionHandlers;
 using Orders.API.HealthChecks;
 using Orders.API.Services;
+using System.Reflection;
 
 namespace Orders.API.Extensions
 {
@@ -34,6 +35,9 @@ namespace Orders.API.Extensions
                     Version = "v1",
                     Description = "API de gestión de órdenes del eCommerce."
                 });
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
             });
 
             services.AddHealthChecks()
