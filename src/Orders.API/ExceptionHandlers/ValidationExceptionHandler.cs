@@ -11,7 +11,10 @@ namespace Orders.API.ExceptionHandlers
             if (exception is not ValidationException ex) return false;
 
             var correlationId = context.Items["CorrelationId"]?.ToString();
-
+           
+            if (correlationId != null)                                         
+                context.Response.Headers["x-correlation-id"] = correlationId;  
+           
             context.Response.StatusCode = 400;
             await context.Response.WriteAsJsonAsync(new
             {

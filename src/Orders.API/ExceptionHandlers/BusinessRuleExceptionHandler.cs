@@ -19,7 +19,9 @@ namespace Orders.API.ExceptionHandlers
             };
             
             var correlationId = context.Items["CorrelationId"]?.ToString();
-            
+            if (correlationId != null)                                          
+                context.Response.Headers["x-correlation-id"] = correlationId;
+
             context.Response.StatusCode = status;
             await context.Response.WriteAsJsonAsync(new
             {

@@ -17,7 +17,7 @@ namespace Orders.API.Controllers
             })
             .WithTags("Orders")
             .WithSummary("Listar órdenes")
-            .WithDescription("Devuelve todas las órdenes. Filtro opcional: ?usuarioId=, ?productoId=")
+            .WithDescription("Devuelve todas las órdenes. Filtro opcional por UsuarioID o ProductoID")
             .Produces<IEnumerable<OrderResponse>>(200)
             .Produces<ErrorResponse>(500);
 
@@ -29,7 +29,7 @@ namespace Orders.API.Controllers
             })
               .WithTags("Orders")
               .WithSummary("Obtener orden por ID")
-              .WithDescription("Devuelve el detalle de una orden. ORD-001 (404) si no existe.")
+              .WithDescription("Devuelve el detalle de una orden.")
               .Produces<OrderResponse>(200)
               .Produces<ErrorResponse>(404)
               .Produces<ErrorResponse>(500);
@@ -43,11 +43,7 @@ namespace Orders.API.Controllers
             })
                 .WithTags("Orders")
                 .WithSummary("Crear orden")
-                .WithDescription("Crea una orden en estado Pendiente. " +
-                    "ORD-002 (400) datos inválidos, " +
-                    "ORD-003 (404) usuario no encontrado, " +
-                    "ORD-004 (404) producto no encontrado, " +
-                    "ORD-005 (422) stock insuficiente.")
+                .WithDescription("Crea una orden en estado Pendiente. ")
                   .Produces<OrderResponse>(201)
                   .Produces<ErrorResponse>(400)
                   .Produces<ErrorResponse>(404)
@@ -61,9 +57,7 @@ namespace Orders.API.Controllers
             })
              .WithTags("Orders")
              .WithSummary("Actualizar estado de orden")
-             .WithDescription("Actualiza el estado. " +
-                "ORD-001 (404) orden no encontrada, " +
-                "ORD-006 (409) transición de estado inválida.")
+             .WithDescription("Actualiza el estado de una orden existente. ")
               .Produces<UpdateOrderStatusResponse>(200)
               .Produces<ErrorResponse>(404)
                .Produces<ErrorResponse>(409)
@@ -76,9 +70,7 @@ namespace Orders.API.Controllers
             })
             .WithTags("Orders")
             .WithSummary("Eliminar orden")
-            .WithDescription("Elimina una orden en estado Cancelada. " +
-                "ORD-001 (404) orden no encontrada, " +
-                "ORD-008 (409) la orden no está cancelada.")
+            .WithDescription("Elimina una orden en estado Cancelada. ")
             .Produces(204)
             .Produces<ErrorResponse>(404)
             .Produces<ErrorResponse>(409)
