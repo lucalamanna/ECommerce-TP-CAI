@@ -10,7 +10,7 @@ namespace Orders.API.ExceptionHandlers
         public async ValueTask<bool> TryHandleAsync(
         HttpContext context, Exception exception, CancellationToken cancellationToken)
         {
-            var correlationId = context.Items["CorrelationId"]?.ToString();
+            var correlationId = context.Items["X-Correlation-Id"]?.ToString();
             _logger.LogError(exception,
                "Error inesperado. {ErrorCode}", "ORD-007");
             
