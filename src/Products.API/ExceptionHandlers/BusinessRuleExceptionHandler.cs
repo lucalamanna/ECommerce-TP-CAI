@@ -8,6 +8,10 @@ public class BusinessRuleExceptionHandler(ILogger<BusinessRuleExceptionHandler> 
     {
         if (exception is not BusinessRuleException ex) return false;
 
+        var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+        if (correlationId != null)
+            context.Response.Headers["x-correlation-id"] = correlationId;
+
         logger.LogWarning("Regla de negocio violada. ErrorCode: {ErrorCode}, Message: {Message}, Path: {Path}",
             ex.ErrorCode, ex.Message, context.Request.Path);
 

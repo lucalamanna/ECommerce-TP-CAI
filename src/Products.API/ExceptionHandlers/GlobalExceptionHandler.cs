@@ -9,6 +9,10 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
     {
         logger.LogError(exception, "Error inesperado en {Path}", context.Request.Path);
 
+        var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+        if (correlationId != null)
+            context.Response.Headers["x-correlation-id"] = correlationId;
+
         context.Response.StatusCode = 500;
         await context.Response.WriteAsJsonAsync(new
         {

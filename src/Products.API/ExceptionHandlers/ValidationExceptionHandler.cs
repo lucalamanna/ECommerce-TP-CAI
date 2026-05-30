@@ -10,6 +10,10 @@ public class ValidationExceptionHandler(ILogger<ValidationExceptionHandler> logg
     {
         if (exception is not ValidationException ex) return false;
 
+        var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+        if (correlationId != null)
+            context.Response.Headers["x-correlation-id"] = correlationId;
+
         logger.LogWarning("Error de validación. ErrorCode: {ErrorCode}, Message: {Message}, Path: {Path}",
             ex.ErrorCode, ex.Message, context.Request.Path);
 
