@@ -1,14 +1,20 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
-using Products.API.Exceptions; 
+using Products.API.Exceptions;
 
-namespace Products.API.ExceptionHandlers;
-
-public class NotFoundExceptionHandler : IExceptionHandler
+public class NotFoundExceptionHandler(ILogger<NotFoundExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
     HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         if (exception is not NotFoundException ex) return false;
+
+        var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+        if (correlationId != null)
+            context.Response.Headers["x-correlation-id"] = correlationId;
+
+        logger.LogWarning("Recurso no encontrado. ErrorCode: {ErrorCode}, Path: {Path}",
+            ex.ErrorCode, context.Request.Path);
+
         context.Response.StatusCode = 404;
         await context.Response.WriteAsJsonAsync(new
         {

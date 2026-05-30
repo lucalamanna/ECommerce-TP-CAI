@@ -1,19 +1,18 @@
 ﻿using Microsoft.Data.Sqlite;
 using Dapper;
 
-namespace Products.API.Services;
+namespace Products.API.Data;
 
-public class DatabaseInitializer(IConfiguration config)
+public class DatabaseInitializer(IConfiguration config, ILogger<DatabaseInitializer> logger)
 {
-    private readonly IConfiguration _config = config;
-
     public void Initialize()
     {
-        var connectionString = _config.GetConnectionString("DefaultConnection")
-            ?? "Data Source=app.db";
+        var connectionString = config.GetConnectionString("DefaultConnection")
+            ?? "Data Source=products.db";
 
         using var connection = new SqliteConnection(connectionString);
         connection.Open();
+
         connection.Execute("""
             CREATE TABLE IF NOT EXISTS products (
                 id TEXT PRIMARY KEY,
@@ -25,5 +24,7 @@ public class DatabaseInitializer(IConfiguration config)
                 fecha_creacion TEXT NOT NULL
             );
             """);
+
+        logger.LogInformation("SQLite inicializado correctamente → {db}", connectionString);
     }
 }

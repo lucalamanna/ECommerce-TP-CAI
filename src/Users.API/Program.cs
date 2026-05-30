@@ -75,3 +75,4 @@ app.MapHealthChecksUI(setup => setup.UIPath = "/health-ui");
 app.MapUsersEndpoints();
 
 app.Run();
+

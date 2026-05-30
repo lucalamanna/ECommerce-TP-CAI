@@ -6,10 +6,16 @@ namespace Orders.API.ExceptionHandlers
     public class NotFoundExceptionHandler : IExceptionHandler
     {
         public async ValueTask<bool> TryHandleAsync(
-        HttpContext context, Exception exception,
-        CancellationToken cancellationToken)
+        HttpContext context, Exception exception, CancellationToken cancellationToken)
         {
             if (exception is not NotFoundException ex) return false;
+
+            var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+
+            if (correlationId != null)                                          
+                context.Response.Headers["x-correlation-id"] = correlationId;
+
+            context.Response.Headers["x-correlation-id"] = correlationId;
 
             context.Response.StatusCode = 404;
             await context.Response.WriteAsJsonAsync(new
@@ -20,7 +26,8 @@ namespace Orders.API.ExceptionHandlers
                 detail = "El recurso solicitado no fue encontrado.",
                 instance = context.Request.Path.Value,
                 errorCode = ex.ErrorCode,
-                errorMessage = ex.Message
+                errorMessage = ex.Message,
+                correlationId
             }, cancellationToken: cancellationToken);
 
             return true;
