@@ -1,7 +1,7 @@
 ﻿using Dapper;
 using Microsoft.Data.Sqlite;
 
-namespace Users.API;
+namespace Users.API.Data;
 
 public class DatabaseInitializer(IConfiguration config, ILogger<DatabaseInitializer> logger)
 {
