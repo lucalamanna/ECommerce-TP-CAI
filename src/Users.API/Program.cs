@@ -15,7 +15,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddAppLogging();
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Users API",
+        Version = "v1",
+        Description = "API de gestión de usuarios del eCommerce."
+    });
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+});
 
 builder.Services.AddExceptionHandler<NotFoundExceptionHandler>();
 builder.Services.AddExceptionHandler<BusinessRuleExceptionHandler>();
