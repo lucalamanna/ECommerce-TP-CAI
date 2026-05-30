@@ -8,6 +8,10 @@ public class NotFoundExceptionHandler(ILogger<NotFoundExceptionHandler> logger) 
     {
         if (exception is not NotFoundException ex) return false;
 
+        var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+        if (correlationId != null)
+            context.Response.Headers["x-correlation-id"] = correlationId;
+
         logger.LogWarning("Recurso no encontrado. ErrorCode: {ErrorCode}, Path: {Path}",
             ex.ErrorCode, context.Request.Path);
 
