@@ -1,6 +1,5 @@
 ﻿using Orders.API.DTOs;
 using Orders.API.Services;
-using static Orders.API.DTOs.APIErrorResponse;
 
 
 namespace Orders.API.Controllers
@@ -37,7 +36,7 @@ namespace Orders.API.Controllers
 
             app.MapPost("/api/orders", async (OrderService service, CreateOrderRequest request, HttpContext http) =>
             {
-                var correlationId = http.Items["CorrelationId"]?.ToString();
+                var correlationId = http.Items["X-Correlation-Id"]?.ToString();
                 var order = await service.CreateAsync(request, correlationId);
                 return Results.Created($"/api/orders/{order.Id}", order);
             })
