@@ -1,6 +1,7 @@
 ﻿using Serilog;
 using Serilog.Events;
 using Serilog.Filters;
+using Serilog.Formatting.Json;  
 
 namespace Products.API.Extensions;
 
@@ -33,9 +34,9 @@ public static class LoggingExtensions
                     return true;
                 })
                 .WriteTo.File(
-                    path: "logs/audit.log",
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss} | Products.API | {RequestMethod} | {RequestPath} | {StatusCode}{NewLine}",
-                    rollingInterval: RollingInterval.Day))
+                     new JsonFormatter(),
+                     path: "logs/audit.log",
+                     rollingInterval: RollingInterval.Day))
             .CreateLogger();
 
         builder.Host.UseSerilog();
