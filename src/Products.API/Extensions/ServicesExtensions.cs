@@ -1,4 +1,5 @@
-﻿using Products.API.Data;
+﻿using Microsoft.OpenApi.Models;
+using Products.API.Data;
 using Products.API.ExceptionHandlers;
 using Products.API.HealthChecks;
 using Products.API.Services;
@@ -11,7 +12,6 @@ public static class ServicesExtensions
     public static IServiceCollection AddAppServices(this IServiceCollection services)
     {
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
 
         services.AddExceptionHandler<NotFoundExceptionHandler>();
         services.AddExceptionHandler<BusinessRuleExceptionHandler>();
@@ -24,7 +24,7 @@ public static class ServicesExtensions
 
         services.AddHttpClient("OrdersApi", client =>
         {
-            client.BaseAddress = new Uri("http://localhost:5095");
+            client.BaseAddress = new Uri("https://localhost:7042");
         });
 
         services.AddHealthChecks()
@@ -39,6 +39,13 @@ public static class ServicesExtensions
 
         services.AddSwaggerGen(c =>
         {
+            c.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Title = "Products API",
+                Version = "v1",
+                Description = "API de gestión de productos del eCommerce."
+            });
+
             var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
             var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
             c.IncludeXmlComments(xmlPath);
