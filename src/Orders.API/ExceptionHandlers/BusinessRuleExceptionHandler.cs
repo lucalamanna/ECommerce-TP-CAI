@@ -18,8 +18,10 @@ namespace Orders.API.ExceptionHandlers
                 _ => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede procesar la solicitud.")
             };
             
-            var correlationId = context.Items["CorrelationId"]?.ToString();
-            
+            var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+            if (correlationId != null)                                          
+                context.Response.Headers["x-correlation-id"] = correlationId;
+
             context.Response.StatusCode = status;
             await context.Response.WriteAsJsonAsync(new
             {

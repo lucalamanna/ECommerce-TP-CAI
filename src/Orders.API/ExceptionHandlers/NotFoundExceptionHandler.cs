@@ -10,7 +10,12 @@ namespace Orders.API.ExceptionHandlers
         {
             if (exception is not NotFoundException ex) return false;
 
-            var correlationId = context.Items["CorrelationId"]?.ToString();
+            var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+
+            if (correlationId != null)                                          
+                context.Response.Headers["x-correlation-id"] = correlationId;
+
+            context.Response.Headers["x-correlation-id"] = correlationId;
 
             context.Response.StatusCode = 404;
             await context.Response.WriteAsJsonAsync(new

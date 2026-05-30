@@ -7,7 +7,11 @@ namespace Orders.API.Middleware
         private const string HeaderName = "X-Correlation-Id";
         private readonly RequestDelegate _next;
 
-        public CorrelationIdMiddleware(RequestDelegate next) => _next = next;
+        public CorrelationIdMiddleware(RequestDelegate next)
+        {
+            _next = next;
+        }
+
 
         public async Task InvokeAsync(HttpContext context)
         {
@@ -15,8 +19,8 @@ namespace Orders.API.Middleware
             if (string.IsNullOrWhiteSpace(correlationId))
                 correlationId = Guid.NewGuid().ToString();
 
-            context.Items["CorrelationId"] = correlationId;            
-            context.Response.Headers[HeaderName] = correlationId;      
+            context.Items[HeaderName] = correlationId;
+            context.Response.Headers[HeaderName] = correlationId;
 
             using (LogContext.PushProperty("CorrelationId", correlationId))
             using (LogContext.PushProperty("Endpoint", context.Request.Path.Value))
@@ -25,4 +29,5 @@ namespace Orders.API.Middleware
             }
         }
     }
+
 }
