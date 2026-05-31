@@ -19,6 +19,11 @@ namespace Orders.API.Extensions
                 client.BaseAddress = new Uri("http://localhost:5100");
             });
 
+            services.AddHttpClient("UsersApi", client =>
+            {
+                client.BaseAddress = new Uri("http://localhost:5036");
+            });
+
             services.AddExceptionHandler<NotFoundExceptionHandler>();
             services.AddExceptionHandler<ValidationExceptionHandler>();
             services.AddExceptionHandler<BusinessRuleExceptionHandler>();

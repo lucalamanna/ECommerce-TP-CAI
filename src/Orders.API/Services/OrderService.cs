@@ -127,7 +127,17 @@ namespace Orders.API.Services
             {
                 _logger.LogWarning("Datos inválidos. ErrorCode: ORD-002, UsuarioId: {UsuarioId}", request.UsuarioId);
                 throw new ValidationException("ORD-002", "Los datos de la orden son inválidos.");
-            } 
+            }
+
+            var usersClient = _httpClientFactory.CreateClient("UsersApi");
+            var userResponse = await usersClient.GetAsync($"/api/users?id={request.UsuarioId}");
+
+            if (!userResponse.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Usuario no encontrado. ErrorCode: ORD-003, UsuarioId: {UsuarioId}",
+                    request.UsuarioId);
+                throw new NotFoundException("ORD-003", "Usuario no encontrado.");
+            }
 
             var client = _httpClientFactory.CreateClient("ProductsApi");
             
