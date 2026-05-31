@@ -14,8 +14,9 @@ public static class UsersEndpoints
         })
         .WithTags("Users")
         .WithSummary("Listar usuarios")
-        .WithDescription("Devuelve todos los usuarios. Se puede filtrar por id, email, nombre y/o apellido.")
+        .WithDescription("Devuelve todos los usuarios. Se puede filtrar por id, email, nombre y/o apellido. Si se filtra por id y no existe, devuelve 404.")
         .Produces<IEnumerable<UserResponse>>(200)
+        .Produces(404)
         .Produces(500);
 
         app.MapPost("/api/users/register", async (UserService service, RegisterRequest request) =>
