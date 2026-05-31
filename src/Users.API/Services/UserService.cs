@@ -38,7 +38,7 @@ public class UserService(IConfiguration config)
             apellido = $"%{apellido}%"
         });
 
-        return rows.Select(row => new UserResponse
+        var result = rows.Select(row => new UserResponse
         {
             Id = Guid.Parse((string)row.Id),
             Nombre = (string)row.Nombre,
@@ -46,7 +46,12 @@ public class UserService(IConfiguration config)
             Email = (string)row.Email,
             FechaRegistro = DateTime.Parse((string)row.FechaRegistro, null, System.Globalization.DateTimeStyles.RoundtripKind),
             Activo = (long)row.Activo == 1
-        });
+        }).ToList();
+
+        if (!string.IsNullOrEmpty(id) && result.Count == 0)
+            throw new NotFoundException("USR-007", $"Usuario con ID '{id}' no encontrado.");
+
+        return result;
     }
 
     public async Task<UserResponse> RegisterAsync(RegisterRequest request)
