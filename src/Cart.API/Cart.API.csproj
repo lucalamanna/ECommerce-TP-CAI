@@ -10,10 +10,7 @@
 
 	<ItemGroup>
 		<Folder Include="Controllers\" />
-		<Folder Include="Data\" />
 		<Folder Include="Extensions\" />
-		<Folder Include="HealthChecks\" />
-		<Folder Include="Middleware\" />
 		<Folder Include="Services\" />
 	</ItemGroup>
 
