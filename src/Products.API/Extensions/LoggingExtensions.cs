@@ -10,34 +10,22 @@ public static class LoggingExtensions
     public static void AddAppLogging(this WebApplicationBuilder builder)
     {
         Log.Logger = new LoggerConfiguration()
-            .MinimumLevel.Information() 
+            .MinimumLevel.Information()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", LogEventLevel.Information)
             .Enrich.FromLogContext()
             .Enrich.WithProperty("Servicio", "Products.API")
 
-            .WriteTo.Logger(lc => lc
-                .Filter.ByIncludingOnly(le => le.Level >= LogEventLevel.Error)
-                .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}"))
+            .Filter.ByExcluding(Matching.WithProperty<string>("RequestPath",
+                path => path.Contains("/swagger") || path.Contains("/health")))
 
-            .WriteTo.Logger(lc => lc
-                .Filter.ByIncludingOnly(le =>
-                {
-                    var isSerilogMiddleware = Matching.FromSource("Serilog.AspNetCore.RequestLoggingMiddleware")(le);
-                    if (!isSerilogMiddleware) return false;
+            .WriteTo.Console(outputTemplate:
+                "[{Timestamp:HH:mm:ss} {Level:u3}] [{Servicio}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}")
 
-                    if (le.Properties.TryGetValue("RequestPath", out var pathValue) &&
-                        pathValue is ScalarValue scalar && scalar.Value is string path)
-                    {
-                        return !path.Contains("/health", StringComparison.OrdinalIgnoreCase) &&
-                               !path.Contains("/swagger", StringComparison.OrdinalIgnoreCase);
-                    }
-                    return true;
-                })
-                .WriteTo.File(
-                     new JsonFormatter(),
-                     path: "logs/audit.log",
-                     rollingInterval: RollingInterval.Day))
+            .WriteTo.File(
+                formatter: new JsonFormatter(),
+                path: "logs/products-.json",
+                rollingInterval: RollingInterval.Day)
             .CreateLogger();
 
         builder.Host.UseSerilog();
