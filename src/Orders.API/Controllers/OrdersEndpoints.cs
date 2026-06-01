@@ -43,11 +43,11 @@ namespace Orders.API.Controllers
                 .WithTags("Orders")
                 .WithSummary("Crear orden")
                 .WithDescription("Crea una orden en estado Pendiente. ")
-                  .Produces<OrderResponse>(201)
-                  .Produces<ErrorResponse>(400)
-                  .Produces<ErrorResponse>(404)
-                  .Produces<ErrorResponse>(422)
-                  .Produces<ErrorResponse>(500);
+                .Produces<OrderResponse>(201)
+                .Produces<ErrorResponse>(400)
+                .Produces<ErrorResponse>(404)
+                .Produces<ErrorResponse>(422)
+                .Produces<ErrorResponse>(500);
 
             app.MapPut("/api/orders/{id}/status", async (OrderService service, Guid id, UpdateOrderStatusRequest request) =>
             {
@@ -57,10 +57,10 @@ namespace Orders.API.Controllers
              .WithTags("Orders")
              .WithSummary("Actualizar estado de orden")
              .WithDescription("Actualiza el estado de una orden existente. ")
-              .Produces<UpdateOrderStatusResponse>(200)
-              .Produces<ErrorResponse>(404)
-               .Produces<ErrorResponse>(409)
-               .Produces<ErrorResponse>(500);
+             .Produces<UpdateOrderStatusResponse>(200)
+             .Produces<ErrorResponse>(404)
+             .Produces<ErrorResponse>(409)
+             .Produces<ErrorResponse>(500);
 
             app.MapDelete("/api/orders/{id}", async (OrderService service, Guid id) =>
             {

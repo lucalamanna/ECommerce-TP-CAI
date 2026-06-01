@@ -67,11 +67,11 @@ namespace Orders.API.Data
             using var conn = CreateConnection();
 
             var row = await conn.QuerySingleOrDefaultAsync<dynamic>("""
-        SELECT id AS Id, usuario_id AS UsuarioId, total AS Total,
+            SELECT id AS Id, usuario_id AS UsuarioId, total AS Total,
                estado AS Estado, fecha_creacion AS FechaCreacion
-        FROM orders
-        WHERE id = @Id
-        """, new { Id = id.ToString() });
+            FROM orders
+            WHERE id = @Id
+            """, new { Id = id.ToString() });
 
             if (row == null) return null;
 
@@ -106,30 +106,42 @@ namespace Orders.API.Data
         public async Task<Order> CreateAsync(Order order)
         {
             using var conn = CreateConnection();
+            conn.Open();                                  
+            using var transaction = conn.BeginTransaction();
 
-            await conn.ExecuteAsync("""
-        INSERT INTO orders (id, usuario_id, total, estado)
-        VALUES (@Id, @UsuarioId, @Total, @Estado)
-        """, new
-            {
-                Id = order.Id.ToString(),
-                UsuarioId = order.UsuarioId.ToString(),
-                order.Total,
-                order.Estado
-            });
-
-            foreach (var item in order.Items)
+            try
             {
                 await conn.ExecuteAsync("""
-            INSERT INTO order_items (order_id, producto_id, cantidad, precio_unitario)
-            VALUES (@OrderId, @ProductoId, @Cantidad, @PrecioUnitario)
-            """, new
+                    INSERT INTO orders (id, usuario_id, total, estado)
+                    VALUES (@Id, @UsuarioId, @Total, @Estado)
+                    """, new
+                        {
+                            Id = order.Id.ToString(),
+                            UsuarioId = order.UsuarioId.ToString(),
+                            order.Total,
+                            order.Estado
+                        });
+
+                foreach (var item in order.Items)
                 {
-                    OrderId = order.Id.ToString(),
-                    ProductoId = item.ProductoId.ToString(),
-                    item.Cantidad,
-                    item.PrecioUnitario
-                });
+                    await conn.ExecuteAsync("""
+                    INSERT INTO order_items (order_id, producto_id, cantidad, precio_unitario)
+                    VALUES (@OrderId, @ProductoId, @Cantidad, @PrecioUnitario)
+                    """, new
+                        {
+                            OrderId = order.Id.ToString(),
+                            ProductoId = item.ProductoId.ToString(),
+                            item.Cantidad,
+                            item.PrecioUnitario
+                        });
+                }
+                transaction.Commit();
+           
+            }
+            catch
+            {
+                transaction.Rollback();                  
+                throw;                                    
             }
 
             return (await GetByIdAsync(order.Id))!;
