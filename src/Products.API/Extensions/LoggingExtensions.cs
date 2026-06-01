@@ -14,6 +14,7 @@ public static class LoggingExtensions
             .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
             .MinimumLevel.Override("Microsoft.AspNetCore.Hosting.Diagnostics", LogEventLevel.Information)
             .Enrich.FromLogContext()
+            .Enrich.WithProperty("Servicio", "Products.API")
 
             .WriteTo.Logger(lc => lc
                 .Filter.ByIncludingOnly(le => le.Level >= LogEventLevel.Error)
