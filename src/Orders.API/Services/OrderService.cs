@@ -26,21 +26,8 @@ namespace Orders.API.Services
             var orders = await _repository.GetAllAsync(usuarioId, productoId);
 
             _logger.LogInformation("Órdenes obtenidas. Cantidad: {Cantidad}", orders.Count());
-            
-            return orders.Select(o => new OrderResponse
-            {
-                Id = o.Id,
-                UsuarioId = o.UsuarioId,
-                Items = o.Items.Select(i => new OrderItemResponse
-                {
-                    ProductoId = i.ProductoId,
-                    Cantidad = i.Cantidad,
-                    PrecioUnitario = i.PrecioUnitario
-                }).ToList(),
-                Total = o.Total,
-                Estado = o.Estado,
-                FechaCreacion = o.FechaCreacion
-            });
+
+            return orders.Select(MapToResponse);
         }
        
         public async Task<OrderResponse> GetByIdAsync(Guid id)
@@ -58,20 +45,7 @@ namespace Orders.API.Services
 
             _logger.LogInformation("Orden encontrada. Id: {Id}, Estado: {Estado}", order.Id, order.Estado);
 
-            return new OrderResponse
-            {
-                Id = order.Id,
-                UsuarioId = order.UsuarioId,
-                Items = order.Items.Select(i => new OrderItemResponse
-                {
-                    ProductoId = i.ProductoId,
-                    Cantidad = i.Cantidad,
-                    PrecioUnitario = i.PrecioUnitario
-                }).ToList(),
-                Total = order.Total,
-                Estado = order.Estado,
-                FechaCreacion = order.FechaCreacion
-            };
+            return MapToResponse(order);
         }
       
         public async Task<UpdateOrderStatusResponse> UpdateStatusAsync(Guid id, UpdateOrderStatusRequest request)
@@ -195,25 +169,12 @@ namespace Orders.API.Services
             var created = await _repository.CreateAsync(order);
             _logger.LogInformation("Orden creada. Id: {Id}, Total: {Total}", created.Id, created.Total);
 
-            return new OrderResponse
-            {
-                Id = created.Id,
-                UsuarioId = created.UsuarioId,
-                Items = created.Items.Select(i => new OrderItemResponse
-                {
-                    ProductoId = i.ProductoId,
-                    Cantidad = i.Cantidad,
-                    PrecioUnitario = i.PrecioUnitario
-                }).ToList(),
-                Total = created.Total,
-                Estado = created.Estado,
-                FechaCreacion = created.FechaCreacion
-            };
+            return MapToResponse(created);
         }
 
         public async Task<bool> DeleteAsync(Guid id)
         {
-            _logger.LogDebug("Eliminando orden. Id: {Id}", id);
+            _logger.LogInformation("Eliminando orden. Id: {Id}", id);
             var order = await _repository.GetByIdAsync(id);
 
             if (order == null)
@@ -229,10 +190,26 @@ namespace Orders.API.Services
                 throw new BusinessRuleException("ORD-008", "Solo se pueden eliminar órdenes en estado 'Cancelada'.");
             }
 
-            _logger.LogDebug("Orden eliminada. Id: {Id}", id);
+            _logger.LogInformation("Orden eliminada. Id: {Id}", id);
             return await _repository.DeleteAsync(id);
         }
 
-
+        private static OrderResponse MapToResponse(Order order)
+        {
+            return new OrderResponse
+            {
+                Id = order.Id,
+                UsuarioId = order.UsuarioId,
+                Items = order.Items.Select(i => new OrderItemResponse
+                {
+                    ProductoId = i.ProductoId,
+                    Cantidad = i.Cantidad,
+                    PrecioUnitario = i.PrecioUnitario
+                }).ToList(),
+                Total = order.Total,
+                Estado = order.Estado,
+                FechaCreacion = order.FechaCreacion
+            };
+        }
     }
 }
