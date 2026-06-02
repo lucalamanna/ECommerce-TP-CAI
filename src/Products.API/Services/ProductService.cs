@@ -15,6 +15,33 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
         return new SqliteConnection(connectionString);
     }
 
+    private static void ValidarProducto(string nombre, string? descripcion, decimal precio, int? stock, string categoria)
+    {
+        var errores = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(nombre))
+            errores.Add("El campo 'Nombre' es requerido");
+        else if (nombre.Length > 100)
+            errores.Add("El campo 'Nombre' no puede superar los 100 caracteres");
+
+        if (descripcion != null && descripcion.Length > 500)
+            errores.Add("El campo 'Descripcion' no puede superar los 500 caracteres");
+
+        if (precio <= 0)
+            errores.Add("El campo 'Precio' debe ser mayor a 0");
+
+        if (stock == null)
+            errores.Add("El campo 'Stock' es requerido");
+        else if (stock < 0)
+            errores.Add("El campo 'Stock' debe ser mayor o igual a 0");
+
+        if (string.IsNullOrWhiteSpace(categoria))
+            errores.Add("El campo 'Categoria' es requerido");
+
+        if (errores.Count > 0)
+            throw new ValidationException("PRD-002", string.Join("; ", errores));
+    }
+
     public async Task<IEnumerable<Product>> GetAllAsync(string? categoria, string? nombre)
     {
         using var conn = CreateConnection();
@@ -38,8 +65,8 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
     {
         using var conn = CreateConnection();
         var row = await conn.QueryFirstOrDefaultAsync<dynamic>(
-    "SELECT id AS Id, nombre AS Nombre, descripcion AS Descripcion, precio AS Precio, stock AS Stock, categoria AS Categoria, fecha_creacion AS FechaCreacion FROM products WHERE id = @id",
-    new { id = id.ToString() });
+            "SELECT id AS Id, nombre AS Nombre, descripcion AS Descripcion, precio AS Precio, stock AS Stock, categoria AS Categoria, fecha_creacion AS FechaCreacion FROM products WHERE id = @id",
+            new { id = id.ToString() });
 
         if (row == null)
             throw new NotFoundException("PRD-001", "Producto no encontrado.");
@@ -58,13 +85,7 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
 
     public async Task<Product> CreateAsync(CreateProductRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Nombre) ||
-         request.Nombre.Length > 100 ||                    
-        (request.Descripcion != null && request.Descripcion.Length > 500) || 
-         string.IsNullOrWhiteSpace(request.Categoria) ||
-         request.Precio <= 0 ||
-         request.Stock < 0)
-            throw new ValidationException("PRD-002", "Los datos del producto son inválidos.");
+        ValidarProducto(request.Nombre, request.Descripcion, request.Precio, request.Stock, request.Categoria);
 
         using var conn = CreateConnection();
 
@@ -87,13 +108,7 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
 
     public async Task<Product> UpdateAsync(Guid id, UpdateProductRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Nombre) ||
-     request.Nombre.Length > 100 ||                    
-     (request.Descripcion != null && request.Descripcion.Length > 500) || 
-     string.IsNullOrWhiteSpace(request.Categoria) ||
-     request.Precio <= 0 ||
-     request.Stock < 0)
-            throw new ValidationException("PRD-002", "Los datos del producto son inválidos.");
+        ValidarProducto(request.Nombre, request.Descripcion, request.Precio, request.Stock, request.Categoria);
 
         await GetByIdAsync(id);
 
@@ -107,10 +122,8 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
 
     public async Task DeleteAsync(Guid id)
     {
-        // Verificar que el producto existe
         await GetByIdAsync(id);
 
-        // Verificar si tiene órdenes activas en Orders.API
         var client = httpClientFactory.CreateClient("OrdersApi");
         var response = await client.GetAsync($"/api/orders?productoId={id}");
 
