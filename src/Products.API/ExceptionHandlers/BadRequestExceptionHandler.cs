@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Products.API.ExceptionHandlers;
 
@@ -13,8 +14,10 @@ public class BadRequestExceptionHandler(ILogger<BadRequestExceptionHandler> logg
         if (correlationId != null)
             context.Response.Headers["x-correlation-id"] = correlationId;
 
-        logger.LogWarning("Request inválido. ErrorCode: {ErrorCode}, Path: {Path}",
-            "PRD-002", context.Request.Path);
+        var errorMessage = ExtraerMensaje(ex);
+
+        logger.LogWarning("Request inválido. ErrorCode: {ErrorCode}, Message: {Message}, Path: {Path}",
+            "PRD-002", errorMessage, context.Request.Path);
 
         context.Response.StatusCode = 400;
         await context.Response.WriteAsJsonAsync(new
@@ -25,8 +28,33 @@ public class BadRequestExceptionHandler(ILogger<BadRequestExceptionHandler> logg
             detail = "Los datos enviados son inválidos.",
             instance = context.Request.Path.Value,
             errorCode = "PRD-002",
-            errorMessage = "Los datos del producto son inválidos."
+            errorMessage
         }, cancellationToken: cancellationToken);
         return true;
     }
+
+    private static string ExtraerMensaje(Microsoft.AspNetCore.Http.BadHttpRequestException ex)
+    {
+        var inner = ex.InnerException?.Message ?? ex.Message;
+
+        // Extraer el path del campo: "Path: $.precio" → "precio"
+        var pathMatch = Regex.Match(inner, @"Path:\s*\$\.(\w+)");
+        if (pathMatch.Success)
+        {
+            var campo = CapitalizarPrimera(pathMatch.Groups[1].Value);
+            return $"El campo '{campo}' tiene un formato inválido";
+        }
+
+        // JSON completamente malformado (sin path de campo)
+        if (inner.Contains("invalid start of a value") ||
+         inner.Contains("JsonReaderException") ||
+         inner.Contains("trailing comma") ||
+         inner.Contains("is invalid after a value"))
+            return "El cuerpo de la solicitud contiene JSON inválido";
+
+        return "Los datos del producto son inválidos";
+    }
+
+    private static string CapitalizarPrimera(string s) =>
+        string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s[1..];
 }
