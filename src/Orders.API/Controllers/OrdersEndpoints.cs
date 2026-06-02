@@ -161,8 +161,7 @@ public static class OrdersEndpoints
         .WithDescription("Actualiza el estado de una orden. Transiciones válidas: Pendiente→Confirmada, Pendiente→Cancelada, Confirmada→Enviada, Confirmada→Cancelada, Enviada→Entregada.")
         .Produces<UpdateOrderStatusResponse>(200)
         .Produces<ErrorResponse>(404)
-        .Produces<ErrorResponse>(409)
-        .Produces<ErrorResponse>(422)
+        .Produces<ErrorResponse>(409)        
         .Produces<ErrorResponse>(500)
         .WithOpenApi(op =>
         {
@@ -175,20 +174,13 @@ public static class OrdersEndpoints
                 "El recurso solicitado no fue encontrado.",
                 "/api/orders/f1e2d3c4-0000-0000-0000-aabbccddeeff/status",
                 "ORD-001", "Orden no encontrada.");
-            op.Responses["409"].Description = "Transición de estado inválida (ORD-006) o precio del producto cambió (ORD-009)";
+            op.Responses["409"].Description = "Transición de estado inválida (ORD-006)";
             op.Responses["409"].Content["application/json"].Example = ErrorORD(
                 "https://tools.ietf.org/html/rfc7231#section-6.5.9",
                 "Conflict", 409,
                 "No se puede modificar el estado.",
                 "/api/orders/f1e2d3c4-0000-0000-0000-aabbccddeeff/status",
                 "ORD-006", "Una orden en estado 'Confirmada' no puede pasar a 'Pendiente'.");
-            op.Responses["422"].Description = "Stock insuficiente al confirmar (ORD-005)";
-            op.Responses["422"].Content["application/json"].Example = ErrorORD(
-                "https://tools.ietf.org/html/rfc4918#section-11.2",
-                "Unprocessable Entity", 422,
-                "No se puede procesar la solicitud.",
-                "/api/orders/f1e2d3c4-0000-0000-0000-aabbccddeeff/status",
-                "ORD-005", "Stock insuficiente para 'Aire acondicionado'. Disponible: 2, solicitado: 5.");
             op.Responses["500"].Description = "Error interno (ORD-007)";
             op.Responses["500"].Content["application/json"].Example = ErrorORD(
                 "https://tools.ietf.org/html/rfc7231#section-6.6.1",

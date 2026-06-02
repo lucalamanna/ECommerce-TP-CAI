@@ -3,16 +3,14 @@ using Orders.API.Exceptions;
 
 namespace Orders.API.ExceptionHandlers
 {
-    public class GlobalExceptionHandler : IExceptionHandler
-    {
-        private readonly ILogger<GlobalExceptionHandler> _logger;
-        public GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) => _logger = logger;
+    public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
+    {     
         public async ValueTask<bool> TryHandleAsync(
         HttpContext context, Exception exception, CancellationToken cancellationToken)
         {
             var correlationId = context.Items["X-Correlation-Id"]?.ToString();
-            _logger.LogError(exception,
-               "Error inesperado. {ErrorCode}", "ORD-007");
+                     
+            logger.LogError(exception, "Error inesperado. {ErrorCode}", "ORD-007");
             
             if (correlationId != null)                                         
                 context.Response.Headers["x-correlation-id"] = correlationId;
