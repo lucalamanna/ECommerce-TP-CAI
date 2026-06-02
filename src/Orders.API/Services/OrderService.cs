@@ -97,11 +97,7 @@ namespace Orders.API.Services
             _logger.LogInformation("Creando orden. UsuarioId: {UsuarioId}, Items: {Cantidad}",
             request.UsuarioId, request.Items?.Count ?? 0);
 
-            if (request.Items == null || !request.Items.Any() || request.Items.Any(i => i.Cantidad <= 0))
-            {
-                _logger.LogWarning("Datos inválidos. ErrorCode: ORD-002, UsuarioId: {UsuarioId}", request.UsuarioId);
-                throw new ValidationException("ORD-002", "Los datos de la orden son inválidos.");
-            }
+            ValidarRequest(request);
 
             var usersClient = _httpClientFactory.CreateClient("UsersApi");
             var userResponse = await usersClient.GetAsync($"/api/users?id={request.UsuarioId}");
@@ -211,5 +207,23 @@ namespace Orders.API.Services
                 FechaCreacion = order.FechaCreacion
             };
         }
+
+        private static void ValidarRequest(CreateOrderRequest request)
+        {
+            var errores = new List<string>();
+
+            if (request.UsuarioId == Guid.Empty)
+                errores.Add("El campo 'UsuarioId' es requerido.");
+
+            if (request.Items == null || !request.Items.Any())
+                errores.Add("La orden debe contener al menos un item.");
+            else if (request.Items.Any(i => i.Cantidad <= 0))
+                errores.Add("La cantidad de cada item debe ser mayor a 0.");
+
+            if (errores.Count > 0)
+                throw new ValidationException("ORD-002", string.Join("; ", errores));
+        }
+
+
     }
 }
