@@ -27,6 +27,7 @@ namespace Orders.API.Extensions
             services.AddExceptionHandler<NotFoundExceptionHandler>();
             services.AddExceptionHandler<ValidationExceptionHandler>();
             services.AddExceptionHandler<BusinessRuleExceptionHandler>();
+            services.AddExceptionHandler<BadHttpRequestExceptionHandler>();
             services.AddExceptionHandler<GlobalExceptionHandler>();
             services.AddProblemDetails();
 
