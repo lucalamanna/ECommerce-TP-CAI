@@ -3,12 +3,19 @@ using Users.API.Exceptions;
 
 namespace Users.API.ExceptionHandlers;
 
-public class BusinessRuleExceptionHandler : IExceptionHandler
+public class BusinessRuleExceptionHandler(ILogger<BusinessRuleExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
         HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         if (exception is not BusinessRuleException ex) return false;
+
+        var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+        if (correlationId != null)
+            context.Response.Headers["x-correlation-id"] = correlationId;
+
+        logger.LogWarning("Regla de negocio violada. ErrorCode: {ErrorCode}, Message: {Message}, Path: {Path}",
+            ex.ErrorCode, ex.Message, context.Request.Path);
 
         var (status, type, title, detail) = ex.ErrorCode switch
         {
@@ -19,8 +26,6 @@ public class BusinessRuleExceptionHandler : IExceptionHandler
             _ => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede procesar la solicitud.")
         };
 
-        var correlationId = context.Items["X-Correlation-Id"]?.ToString() ?? string.Empty;
-
         context.Response.StatusCode = status;
         await context.Response.WriteAsJsonAsync(new
         {
@@ -30,8 +35,7 @@ public class BusinessRuleExceptionHandler : IExceptionHandler
             detail,
             instance = context.Request.Path.Value,
             errorCode = ex.ErrorCode,
-            errorMessage = ex.Message,
-            correlationId
+            errorMessage = ex.Message
         }, cancellationToken: cancellationToken);
         return true;
     }
