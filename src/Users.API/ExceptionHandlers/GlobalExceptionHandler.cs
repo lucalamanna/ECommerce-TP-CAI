@@ -2,12 +2,16 @@
 
 namespace Users.API.ExceptionHandlers;
 
-public class GlobalExceptionHandler : IExceptionHandler
+public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
         HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
-        var correlationId = context.Items["X-Correlation-Id"]?.ToString() ?? string.Empty;
+        logger.LogError(exception, "Error inesperado en {Path}", context.Request.Path);
+
+        var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+        if (correlationId != null)
+            context.Response.Headers["x-correlation-id"] = correlationId;
 
         context.Response.StatusCode = 500;
         await context.Response.WriteAsJsonAsync(new
@@ -18,8 +22,7 @@ public class GlobalExceptionHandler : IExceptionHandler
             detail = "Ocurrió un error inesperado.",
             instance = context.Request.Path.Value,
             errorCode = "USR-006",
-            errorMessage = "Error interno al procesar el usuario.",
-            correlationId
+            errorMessage = "Error interno al procesar el usuario."
         }, cancellationToken: cancellationToken);
         return true;
     }
