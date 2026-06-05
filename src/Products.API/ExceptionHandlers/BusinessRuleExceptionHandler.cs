@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Products.API.Exceptions;
 
-public class BusinessRuleExceptionHandler(ILogger<BusinessRuleExceptionHandler> logger) : IExceptionHandler
+namespace Products.API.ExceptionHandlers;
+
+public class BusinessRuleExceptionHandler : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
         HttpContext context, Exception exception, CancellationToken cancellationToken)
@@ -11,9 +13,6 @@ public class BusinessRuleExceptionHandler(ILogger<BusinessRuleExceptionHandler> 
         var correlationId = context.Items["X-Correlation-Id"]?.ToString();
         if (correlationId != null)
             context.Response.Headers["x-correlation-id"] = correlationId;
-
-        logger.LogWarning("Regla de negocio violada. ErrorCode: {ErrorCode}, Message: {Message}, Path: {Path}",
-            ex.ErrorCode, ex.Message, context.Request.Path);
 
         var (statusCode, type, title, detail) = ex.ErrorCode switch
         {
