@@ -16,8 +16,7 @@ public class BadRequestExceptionHandler(ILogger<BadRequestExceptionHandler> logg
 
         var errorMessage = ExtraerMensaje(ex);
 
-        logger.LogWarning("Request inválido. ErrorCode: {ErrorCode}, Message: {Message}, Path: {Path}",
-            "PRD-002", errorMessage, context.Request.Path);
+        logger.LogWarning(exception, "Request inválido. {ErrorCode}", "PRD-002");
 
         context.Response.StatusCode = 400;
         await context.Response.WriteAsJsonAsync(new
@@ -38,7 +37,6 @@ public class BadRequestExceptionHandler(ILogger<BadRequestExceptionHandler> logg
     {
         var inner = ex.InnerException?.Message ?? ex.Message;
 
-        // Extraer el path del campo: "Path: $.precio" → "precio"
         var pathMatch = Regex.Match(inner, @"Path:\s*\$\.(\w+)");
         if (pathMatch.Success)
         {
@@ -46,7 +44,6 @@ public class BadRequestExceptionHandler(ILogger<BadRequestExceptionHandler> logg
             return $"El campo '{campo}' tiene un formato inválido";
         }
 
-        // JSON completamente malformado (sin path de campo)
         if (ex.InnerException is System.Text.Json.JsonException)
             return "El cuerpo de la solicitud contiene JSON inválido";
 
