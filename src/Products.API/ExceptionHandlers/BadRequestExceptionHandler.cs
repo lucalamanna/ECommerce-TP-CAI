@@ -28,7 +28,8 @@ public class BadRequestExceptionHandler(ILogger<BadRequestExceptionHandler> logg
             detail = "Los datos enviados son inválidos.",
             instance = context.Request.Path.Value,
             errorCode = "PRD-002",
-            errorMessage
+            errorMessage,
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }
