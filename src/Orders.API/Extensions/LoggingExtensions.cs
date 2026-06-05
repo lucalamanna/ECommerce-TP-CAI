@@ -20,7 +20,7 @@ namespace Orders.API.Extensions
                     path => path.Contains("/swagger") || path.Contains("/health")))
 
                 .WriteTo.Console(outputTemplate:
-                "[{Timestamp:HH:mm:ss} {Level:u3}] [{Servicio}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}")
+                "[{Timestamp:HH:mm:ss} {Level:u3}] [{Servicio}] [{Endpoint}] [{CorrelationId}] {Message:lj}{NewLine}{Exception}")
 
                  .WriteTo.File(
                    formatter: new JsonFormatter(),
