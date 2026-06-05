@@ -22,7 +22,7 @@ namespace Orders.API.Middleware
             context.Items[HeaderName] = correlationId;
             context.Response.Headers[HeaderName] = correlationId;
 
-            using (LogContext.PushProperty("X-Correlation-Id", correlationId))
+            using (LogContext.PushProperty("CorrelationId", correlationId))
             using (LogContext.PushProperty("Endpoint", context.Request.Path.Value))
             {
                 await _next(context);

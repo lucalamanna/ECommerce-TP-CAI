@@ -16,7 +16,8 @@ namespace Orders.API.ExceptionHandlers
 
             var errorMessage = ObtenerMensajeDetallado(ex);
 
-            logger.LogWarning(exception, "Request inválido. {ErrorCode}", "ORD-002");
+            logger.LogWarning("Request inválido. {ErrorCode}, Campo: {ErrorMessage}, Path: {Path}",
+                "ORD-002", errorMessage, context.Request.Path);
 
             context.Response.StatusCode = 400;
             await context.Response.WriteAsJsonAsync(new
