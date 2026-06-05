@@ -46,10 +46,7 @@ public class BadRequestExceptionHandler(ILogger<BadRequestExceptionHandler> logg
         }
 
         // JSON completamente malformado (sin path de campo)
-        if (inner.Contains("invalid start of a value") ||
-         inner.Contains("JsonReaderException") ||
-         inner.Contains("trailing comma") ||
-         inner.Contains("is invalid after a value"))
+        if (ex.InnerException is System.Text.Json.JsonException)
             return "El cuerpo de la solicitud contiene JSON inválido";
 
         return "Los datos del producto son inválidos";
