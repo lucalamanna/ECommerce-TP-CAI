@@ -2,7 +2,6 @@
 using Orders.API.DTOs;
 using Orders.API.Exceptions;
 using Orders.API.Models;
-using System.Net.Http;
 
 namespace Orders.API.Services
 {
