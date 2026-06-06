@@ -17,7 +17,7 @@ namespace Notifications.API.Services
             ValidarRequest(request);
 
             var usersClient = httpClientFactory.CreateClient("UsersApi");
-            var userResponse = await usersClient.GetAsync($"/api/users/{request.UsuarioId}");
+            var userResponse = await usersClient.GetAsync($"/api/users?id={request.UsuarioId}");
 
             if (!userResponse.IsSuccessStatusCode)
             {
