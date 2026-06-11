@@ -2,16 +2,12 @@
 using Notifications.API.Exceptions;
 
 namespace Notifications.API.ExceptionHandlers;
-
-public class NotFoundExceptionHandler(ILogger<NotFoundExceptionHandler> logger) : IExceptionHandler
+public class NotFoundExceptionHandler : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
-        HttpContext context, Exception exception, CancellationToken cancellationToken)
+    HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         if (exception is not NotFoundException ex) return false;
-
-        logger.LogWarning("Recurso no encontrado. ErrorCode: {ErrorCode}, Message: {Message}",
-            ex.ErrorCode, ex.Message);
 
         var correlationId = context.Items["X-Correlation-Id"]?.ToString();
         if (correlationId != null)
@@ -26,8 +22,9 @@ public class NotFoundExceptionHandler(ILogger<NotFoundExceptionHandler> logger) 
             detail = "El recurso solicitado no fue encontrado.",
             instance = context.Request.Path.Value,
             errorCode = ex.ErrorCode,
-            errorMessage = ex.Message
-        }, cancellationToken);
+            errorMessage = ex.Message,
+            correlationId
+        }, cancellationToken: cancellationToken);
         return true;
     }
 }
