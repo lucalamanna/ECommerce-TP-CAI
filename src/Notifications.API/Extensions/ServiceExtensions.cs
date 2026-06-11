@@ -14,7 +14,6 @@ public static class ServiceExtensions
         services.AddEndpointsApiExplorer();
 
         services.AddExceptionHandler<NotFoundExceptionHandler>();
-        services.AddExceptionHandler<BusinessRuleExceptionHandler>();
         services.AddExceptionHandler<ValidationExceptionHandler>();
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
