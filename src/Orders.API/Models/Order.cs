@@ -1,5 +1,5 @@
-﻿namespace Orders.API.Models
-{
+﻿namespace Orders.API.Models;
+
        /// <summary>Entidad de dominio que representa una orden de compra.</summary>
     public class Order
     {
@@ -22,4 +22,4 @@
         public DateTime FechaCreacion { get; set; }
     }
     
-}
+

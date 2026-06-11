@@ -1,5 +1,5 @@
-﻿namespace Orders.API.DTOs
-{
+﻿namespace Orders.API.DTOs;
+
     /// <summary>Resultado de la actualización de estado de una orden.</summary>
     public class UpdateOrderStatusResponse
     {
@@ -15,4 +15,4 @@
         /// <example>2026-05-29T15:00:00Z</example>
         public DateTime FechaActualizacion { get; set; }
     }
-}
+
