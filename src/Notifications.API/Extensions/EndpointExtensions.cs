@@ -1,12 +1,11 @@
 ﻿using Notifications.API.Controllers;
 
-namespace Notifications.API.Extensions
+namespace Notifications.API.Extensions;
+
+public static class EndpointExtensions
 {
-    public static class EndpointExtensions
+    public static void MapAppEndpoints(this WebApplication app)
     {
-        public static void MapAppEndpoints(this WebApplication app)
-        {
-            app.MapNotificationsEndpoints();
-        }
+        app.MapNotificationsEndpoints();
     }
 }
