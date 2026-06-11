@@ -2,35 +2,34 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace Orders.API.HealthChecks
+namespace Orders.API.HealthChecks;
+
+public class SqliteHealthCheck : IHealthCheck
 {
-    public class SqliteHealthCheck : IHealthCheck
+    private readonly IConfiguration _config;
+
+    public SqliteHealthCheck(IConfiguration config) => _config = config;
+
+    public async Task<HealthCheckResult> CheckHealthAsync(
+        HealthCheckContext context,
+        CancellationToken cancellationToken = default)
     {
-        private readonly IConfiguration _config;
-
-        public SqliteHealthCheck(IConfiguration config) => _config = config;
-
-        public async Task<HealthCheckResult> CheckHealthAsync(
-            HealthCheckContext context,
-            CancellationToken cancellationToken = default)
+        try
         {
-            try
-            {
-                var connectionString = _config.GetConnectionString("DefaultConnection")
-                    ?? "Data Source=app.db";
+            var connectionString = _config.GetConnectionString("DefaultConnection")
+                ?? "Data Source=app.db";
 
-                using var conn = new SqliteConnection(connectionString);
-                await conn.OpenAsync(cancellationToken);
-                await conn.ExecuteScalarAsync<int>("SELECT 1");
+            using var conn = new SqliteConnection(connectionString);
+            await conn.OpenAsync(cancellationToken);
+            await conn.ExecuteScalarAsync<int>("SELECT 1");
 
-                return HealthCheckResult.Healthy("SELECT 1 ejecutado OK");
-            }
-            catch (Exception ex)
-            {
-                return HealthCheckResult.Unhealthy(
-                    description: "No se pudo conectar a SQLite",
-                    exception: ex);
-            }
+            return HealthCheckResult.Healthy("SELECT 1 ejecutado OK");
+        }
+        catch (Exception ex)
+        {
+            return HealthCheckResult.Unhealthy(
+                description: "No se pudo conectar a SQLite",
+                exception: ex);
         }
     }
 }
