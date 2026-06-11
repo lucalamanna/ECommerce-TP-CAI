@@ -1,37 +1,52 @@
 ﻿using Notifications.API.Data;
+using Notifications.API.ExceptionHandlers;
+using Notifications.API.HealthChecks;
 using Notifications.API.Services;
 using System.Reflection;
 
-namespace Notifications.API.Extensions
+namespace Notifications.API.Extensions;
+
+public static class ServiceExtensions
 {
-    public static class ServiceExtensions
+    public static void AddAppServices(this IServiceCollection services)
     {
-        public static void AddAppServices(this IServiceCollection services)
+        services.AddSingleton<DatabaseInitializer>();
+        services.AddScoped<NotificationRepository>();
+        services.AddScoped<NotificationService>();
+
+        services.AddHttpClient("UsersApi", client =>
         {
-            services.AddSingleton<DatabaseInitializer>();
-            services.AddScoped<NotificationRepository>();
-            services.AddScoped<NotificationService>();
+            client.BaseAddress = new Uri("http://localhost:5200");
+        });
 
-            services.AddHttpClient("UsersApi", client =>
+        services.AddExceptionHandler<NotFoundExceptionHandler>();
+        services.AddExceptionHandler<BusinessRuleExceptionHandler>();
+        services.AddExceptionHandler<ValidationExceptionHandler>();
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        services.AddProblemDetails();
+
+        services.AddHealthChecks()
+            .AddCheck<SqliteHealthCheck>("sqlite-db", tags: ["database"])
+            .AddCheck<ApiStatusCheck>("api-status", tags: ["api"]);
+
+        services.AddHealthChecksUI(setup =>
+        {
+            setup.SetEvaluationTimeInSeconds(600);
+            setup.AddHealthCheckEndpoint("NotificationsApi", "/health");
+        }).AddInMemoryStorage();
+
+        services.AddEndpointsApiExplorer();
+        services.AddSwaggerGen(c =>
+        {
+            c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
             {
-                client.BaseAddress = new Uri("http://localhost:5200");
+                Title = "Notifications API",
+                Version = "v1",
+                Description = "API de gestión de notificaciones del eCommerce."
             });
-
-            services.AddEndpointsApiExplorer();
-
-            services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-                {
-                    Title = "Notifications API",
-                    Version = "v1",
-                    Description = "API de gestión de notificaciones del eCommerce."
-                });
-
-                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-                c.IncludeXmlComments(xmlPath);
-            });
-        }
+            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+            c.IncludeXmlComments(xmlPath);
+        });
     }
 }

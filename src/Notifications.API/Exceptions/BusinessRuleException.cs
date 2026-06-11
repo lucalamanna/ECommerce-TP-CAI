@@ -1,6 +1,6 @@
-﻿namespace Notifications.API.Exceptions
+﻿namespace Notifications.API.Exceptions;
+
+public class BusinessRuleException(string errorCode, string message) : Exception(message)
 {
-    public class BusinessRuleException
-    {
-    }
+    public string ErrorCode { get; } = errorCode;
 }

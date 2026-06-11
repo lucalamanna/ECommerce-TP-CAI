@@ -1,7 +1,6 @@
-﻿namespace Notifications.API.Exceptions
+﻿namespace Notifications.API.Exceptions;
+
+public class NotFoundException(string errorCode, string message) : Exception(message)
 {
-    public class NotFoundException (string errorCode, string message) : Exception(message)
-    {
-        public string ErrorCode { get; } = errorCode;
-    }
+    public string ErrorCode { get; } = errorCode;
 }
