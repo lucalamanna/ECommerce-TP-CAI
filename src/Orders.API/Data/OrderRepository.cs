@@ -15,12 +15,12 @@ namespace Orders.API.Data
         private SqliteConnection CreateConnection() =>
             new(_config.GetConnectionString("DefaultConnection") ?? "Data Source=app.db");
 
-        // --- GET ALL ---
+       
         public async Task<IEnumerable<Order>> GetAllAsync(Guid? usuarioId, Guid? productoId)
         {       
             using var conn = CreateConnection();
 
-                var rows = await conn.QueryAsync< dynamic> ("""
+                var rows = await conn.QueryAsync<dynamic> ("""
                 SELECT id AS Id, usuario_id AS UsuarioId, total AS Total,
                 estado AS Estado, fecha_creacion AS FechaCreacion
                 FROM orders o
@@ -44,11 +44,11 @@ namespace Orders.API.Data
             foreach (var order in orders)
             {
                 var itemRows = (await conn.QueryAsync<dynamic>("""
-            SELECT producto_id AS ProductoId, cantidad AS Cantidad,
+                SELECT producto_id AS ProductoId, cantidad AS Cantidad,
                    precio_unitario AS PrecioUnitario
-            FROM order_items
-            WHERE order_id = @OrderId
-            """, new { OrderId = order.Id.ToString() })).ToList();
+                FROM order_items
+                WHERE order_id = @OrderId
+                """, new { OrderId = order.Id.ToString() })).ToList();
 
                 order.Items = itemRows.Select(row => new OrderItem
                 {
@@ -61,7 +61,7 @@ namespace Orders.API.Data
             return orders;
         }
 
-        // --- GET BY ID ---
+        
         public async Task<Order?> GetByIdAsync(Guid id)
         {
             using var conn = CreateConnection();
@@ -102,7 +102,7 @@ namespace Orders.API.Data
             return order;
         }
 
-        // --- CREATE ---
+        
         public async Task<Order> CreateAsync(Order order)
         {
             using var conn = CreateConnection();
@@ -120,7 +120,7 @@ namespace Orders.API.Data
                             UsuarioId = order.UsuarioId.ToString(),
                             order.Total,
                             order.Estado
-                        });
+                        }, transaction);
 
                 foreach (var item in order.Items)
                 {
@@ -133,7 +133,7 @@ namespace Orders.API.Data
                             ProductoId = item.ProductoId.ToString(),
                             item.Cantidad,
                             item.PrecioUnitario
-                        });
+                        }, transaction);
                 }
                 transaction.Commit();
            
@@ -147,38 +147,51 @@ namespace Orders.API.Data
             return (await GetByIdAsync(order.Id))!;
         }
 
-        // --- UPDATE STATUS ---
+        
         public async Task<Order?> UpdateStatusAsync(Guid id, string estado)
         {
             using var conn = CreateConnection();
 
             var rows = await conn.ExecuteAsync("""
-        UPDATE orders
-        SET estado = @Estado
-        WHERE id = @Id
-        """, new { Estado = estado, Id = id.ToString() });
+            UPDATE orders
+            SET estado = @Estado
+            WHERE id = @Id
+            """, new { Estado = estado, Id = id.ToString() });
 
             if (rows == 0) return null;
 
             return await GetByIdAsync(id);
         }
 
-        //DELETE 
+       
         public async Task<bool> DeleteAsync(Guid id)
         {
             using var conn = CreateConnection();
+            conn.Open();
+            using var transaction = conn.BeginTransaction();
 
-            await conn.ExecuteAsync("""
-        DELETE FROM order_items
-        WHERE order_id = @Id
-        """, new { Id = id.ToString() });
+            try
+            {
+                await conn.ExecuteAsync("""
+                DELETE FROM order_items
+                 WHERE order_id = @Id
+                """, new { Id = id.ToString() }, transaction);
 
-            var rows = await conn.ExecuteAsync("""
-        DELETE FROM orders
-        WHERE id = @Id
-        """, new { Id = id.ToString() });
+                var rows = await conn.ExecuteAsync("""
+                 DELETE FROM orders
+                 WHERE id = @Id
+                 """, new { Id = id.ToString() }, transaction);
 
-            return rows > 0;
+                transaction.Commit();
+                return rows > 0;
+            }
+            catch
+
+            {
+                transaction.Rollback();
+                throw;
+            }
+
         }
     }
 }

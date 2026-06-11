@@ -6,7 +6,7 @@ using Products.API.Exceptions;
 
 namespace Products.API.Services;
 
-public class ProductService(IConfiguration config, IHttpClientFactory httpClientFactory)
+public class ProductService(IConfiguration config, IHttpClientFactory httpClientFactory, ILogger<ProductService> logger)
 {
     private SqliteConnection CreateConnection()
     {
@@ -42,49 +42,61 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
             throw new ValidationException("PRD-002", string.Join("; ", errores));
     }
 
+    private static Product MapRow(dynamic row) => new()
+    {
+        Id = Guid.Parse((string)row.Id),
+        Nombre = (string)row.Nombre,
+        Descripcion = (string?)row.Descripcion,
+        Precio = (decimal)(double)row.Precio,
+        Stock = (int)(long)row.Stock,
+        Categoria = (string)row.Categoria,
+        FechaCreacion = DateTime.Parse((string)row.FechaCreacion, null, System.Globalization.DateTimeStyles.RoundtripKind)
+    };
+
+    private const string SelectColumns =
+        "SELECT id AS Id, nombre AS Nombre, descripcion AS Descripcion, " +
+        "precio AS Precio, stock AS Stock, categoria AS Categoria, " +
+        "fecha_creacion AS FechaCreacion FROM products";
+
     public async Task<IEnumerable<Product>> GetAllAsync(string? categoria, string? nombre)
     {
+        logger.LogInformation("Obteniendo productos. Categoria: {Categoria}, Nombre: {Nombre}", categoria, nombre);
+
         using var conn = CreateConnection();
-        var sql = "SELECT id AS Id, nombre AS Nombre, descripcion AS Descripcion, precio AS Precio, stock AS Stock, categoria AS Categoria, fecha_creacion AS FechaCreacion FROM products WHERE 1=1";
+        var sql = $"{SelectColumns} WHERE 1=1";
         if (!string.IsNullOrEmpty(categoria)) sql += " AND categoria = @categoria";
         if (!string.IsNullOrEmpty(nombre)) sql += " AND nombre LIKE @nombre";
         var rows = await conn.QueryAsync<dynamic>(sql, new { categoria, nombre = $"%{nombre}%" });
-        return rows.Select(row => new Product
-        {
-            Id = Guid.Parse((string)row.Id),
-            Nombre = (string)row.Nombre,
-            Descripcion = (string)row.Descripcion,
-            Precio = (decimal)(double)row.Precio,
-            Stock = (int)(long)row.Stock,
-            Categoria = (string)row.Categoria,
-            FechaCreacion = DateTime.Parse((string)row.FechaCreacion, null, System.Globalization.DateTimeStyles.RoundtripKind)
-        });
+
+        var products = rows.Select(MapRow).ToList();
+        logger.LogInformation("Productos obtenidos. Cantidad: {Cantidad}", (int)products.Count);
+        return products;
     }
 
     public async Task<Product> GetByIdAsync(Guid id)
     {
+        logger.LogInformation("Obteniendo producto. Id: {Id}", id);
+
         using var conn = CreateConnection();
         var row = await conn.QueryFirstOrDefaultAsync<dynamic>(
-            "SELECT id AS Id, nombre AS Nombre, descripcion AS Descripcion, precio AS Precio, stock AS Stock, categoria AS Categoria, fecha_creacion AS FechaCreacion FROM products WHERE id = @id",
+            $"{SelectColumns} WHERE id = @id",
             new { id = id.ToString() });
 
         if (row == null)
-            throw new NotFoundException("PRD-001", "Producto no encontrado.");
-
-        return new Product
         {
-            Id = Guid.Parse((string)row.Id),
-            Nombre = (string)row.Nombre,
-            Descripcion = (string)row.Descripcion,
-            Precio = (decimal)(double)row.Precio,
-            Stock = (int)(long)row.Stock,
-            Categoria = (string)row.Categoria,
-            FechaCreacion = DateTime.Parse((string)row.FechaCreacion, null, System.Globalization.DateTimeStyles.RoundtripKind)
-        };
+            logger.LogWarning("Producto no encontrado. ErrorCode: {ErrorCode}, Id: {Id}", "PRD-001", id);
+            throw new NotFoundException("PRD-001", "Producto no encontrado.");
+        }
+
+        Product product = MapRow(row);
+        logger.LogInformation("Producto encontrado. Id: {Id}, Nombre: {Nombre}",
+            product.Id.ToString(), product.Nombre.ToString()); return product;
     }
 
     public async Task<Product> CreateAsync(CreateProductRequest request)
     {
+        logger.LogInformation("Creando producto. Nombre: {Nombre}, Categoria: {Categoria}", request.Nombre, request.Categoria);
+
         ValidarProducto(request.Nombre, request.Descripcion, request.Precio, request.Stock, request.Categoria);
 
         using var conn = CreateConnection();
@@ -94,7 +106,11 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
             new { nombre = request.Nombre, categoria = request.Categoria });
 
         if (exists > 0)
+        {
+            logger.LogWarning("Producto duplicado. ErrorCode: {ErrorCode}, Nombre: {Nombre}, Categoria: {Categoria}",
+                "PRD-003", request.Nombre, request.Categoria);
             throw new BusinessRuleException("PRD-003", $"Ya existe un producto con ese nombre en la categoría '{request.Categoria}'.");
+        }
 
         var id = Guid.NewGuid();
         var fechaCreacion = DateTime.UtcNow;
@@ -103,11 +119,14 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
             "INSERT INTO products (id, nombre, descripcion, precio, stock, categoria, fecha_creacion) VALUES (@id, @nombre, @descripcion, @precio, @stock, @categoria, @fechaCreacion)",
             new { id = id.ToString(), nombre = request.Nombre, descripcion = request.Descripcion, precio = request.Precio, stock = request.Stock, categoria = request.Categoria, fechaCreacion = fechaCreacion.ToString("o") });
 
+        logger.LogInformation("Producto creado. Id: {Id}, Nombre: {Nombre}", id, request.Nombre);
         return await GetByIdAsync(id);
     }
 
     public async Task<Product> UpdateAsync(Guid id, UpdateProductRequest request)
     {
+        logger.LogInformation("Actualizando producto. Id: {Id}", id);
+
         ValidarProducto(request.Nombre, request.Descripcion, request.Precio, request.Stock, request.Categoria);
 
         await GetByIdAsync(id);
@@ -117,11 +136,14 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
             "UPDATE products SET nombre = @nombre, descripcion = @descripcion, precio = @precio, stock = @stock, categoria = @categoria WHERE id = @id",
             new { id = id.ToString(), nombre = request.Nombre, descripcion = request.Descripcion, precio = request.Precio, stock = request.Stock, categoria = request.Categoria });
 
+        logger.LogInformation("Producto actualizado. Id: {Id}, Nombre: {Nombre}", id, request.Nombre);
         return await GetByIdAsync(id);
     }
 
     public async Task DeleteAsync(Guid id)
     {
+        logger.LogInformation("Eliminando producto. Id: {Id}", id);
+
         await GetByIdAsync(id);
 
         var client = httpClientFactory.CreateClient("OrdersApi");
@@ -135,13 +157,18 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
                 o.Estado == "Confirmada").ToList();
 
             if (ordenesActivas != null && ordenesActivas.Any())
+            {
+                logger.LogWarning("Producto con órdenes activas. ErrorCode: {ErrorCode}, Id: {Id}", "PRD-004", id);
                 throw new BusinessRuleException("PRD-004",
                     "El producto tiene órdenes activas y no puede eliminarse.");
+            }
         }
 
         using var conn = CreateConnection();
         await conn.ExecuteAsync(
             "DELETE FROM products WHERE id = @id",
             new { id = id.ToString() });
+
+        logger.LogInformation("Producto eliminado. Id: {Id}", id);
     }
 }

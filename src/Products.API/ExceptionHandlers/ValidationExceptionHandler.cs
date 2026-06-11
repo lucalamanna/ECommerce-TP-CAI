@@ -2,8 +2,7 @@
 using Products.API.Exceptions;
 
 namespace Products.API.ExceptionHandlers;
-
-public class ValidationExceptionHandler(ILogger<ValidationExceptionHandler> logger) : IExceptionHandler
+public class ValidationExceptionHandler : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
     HttpContext context, Exception exception, CancellationToken cancellationToken)
@@ -14,9 +13,6 @@ public class ValidationExceptionHandler(ILogger<ValidationExceptionHandler> logg
         if (correlationId != null)
             context.Response.Headers["x-correlation-id"] = correlationId;
 
-        logger.LogWarning("Error de validación. ErrorCode: {ErrorCode}, Message: {Message}, Path: {Path}",
-            ex.ErrorCode, ex.Message, context.Request.Path);
-
         context.Response.StatusCode = 400;
         await context.Response.WriteAsJsonAsync(new
         {
@@ -26,7 +22,8 @@ public class ValidationExceptionHandler(ILogger<ValidationExceptionHandler> logg
             detail = "Los datos enviados son inválidos.",
             instance = context.Request.Path.Value,
             errorCode = ex.ErrorCode,
-            errorMessage = ex.Message
+            errorMessage = ex.Message,
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }

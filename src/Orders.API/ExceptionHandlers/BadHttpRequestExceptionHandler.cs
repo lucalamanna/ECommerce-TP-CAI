@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Orders.API.ExceptionHandlers
 {
@@ -7,13 +8,16 @@ namespace Orders.API.ExceptionHandlers
         public async ValueTask<bool> TryHandleAsync(
             HttpContext context, Exception exception, CancellationToken cancellationToken)
         {
-            if (exception is not BadHttpRequestException) return false;
+            if (exception is not BadHttpRequestException ex) return false;
 
             var correlationId = context.Items["X-Correlation-Id"]?.ToString();
             if (correlationId != null)
                 context.Response.Headers["x-correlation-id"] = correlationId;
 
-            logger.LogWarning(exception, "Request inválido. {ErrorCode}", "ORD-002");
+            var errorMessage = ObtenerMensajeDetallado(ex);
+
+            logger.LogWarning("Request inválido. {ErrorCode}, Campo: {ErrorMessage}, Path: {Path}",
+                "ORD-002", errorMessage, context.Request.Path);
 
             context.Response.StatusCode = 400;
             await context.Response.WriteAsJsonAsync(new
@@ -24,11 +28,34 @@ namespace Orders.API.ExceptionHandlers
                 detail = "Los datos enviados son inválidos.",
                 instance = context.Request.Path.Value,
                 errorCode = "ORD-002",
-                errorMessage = "Los datos de la orden son inválidos.",
+                errorMessage,
                 correlationId
             }, cancellationToken: cancellationToken);
 
             return true;
+
         }
+
+
+        private static string ObtenerMensajeDetallado(BadHttpRequestException ex)
+        {
+            var inner = ex.InnerException?.Message ?? ex.Message;
+
+            var pathMatch = Regex.Match(inner, @"Path:\s*\$\.(\w+)");
+            if (pathMatch.Success)
+            {
+                var campo = CapitalizarPrimera(pathMatch.Groups[1].Value);
+                return $"El campo '{campo}' tiene un formato inválido.";
+            }
+
+            if (ex.InnerException is System.Text.Json.JsonException)
+                return "El cuerpo de la solicitud contiene JSON inválido.";
+
+            return "Los datos de la orden son inválidos.";
+        }
+
+        private static string CapitalizarPrimera(string s) =>
+            string.IsNullOrEmpty(s) ? s : char.ToUpper(s[0]) + s[1..];
     }
+
 }

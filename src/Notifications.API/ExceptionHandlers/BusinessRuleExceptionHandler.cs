@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
-using Products.API.Exceptions;
+using Notifications.API.Exceptions;
 
-namespace Products.API.ExceptionHandlers;
+namespace Notifications.API.ExceptionHandlers;
 
 public class BusinessRuleExceptionHandler : IExceptionHandler
 {
@@ -14,12 +14,11 @@ public class BusinessRuleExceptionHandler : IExceptionHandler
         if (correlationId != null)
             context.Response.Headers["x-correlation-id"] = correlationId;
 
-        var (statusCode, type, title, detail) = ex.ErrorCode switch
-        {
-            "PRD-003" => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "Ya existe un recurso con esos datos."),
-            "PRD-004" => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede eliminar el recurso."),
-            _ => (409, "https://tools.ietf.org/html/rfc7231#section-6.5.9", "Conflict", "No se puede procesar la solicitud.")
-        };
+        var (statusCode, type, title, detail) = (409,
+        "https://tools.ietf.org/html/rfc7231#section-6.5.9",
+        "Conflict",
+        "No se puede procesar la solicitud.");
+
         context.Response.StatusCode = statusCode;
         await context.Response.WriteAsJsonAsync(new
         {
