@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Notifications.API.HealthChecks;
-
 public class ApiStatusCheck : IHealthCheck
 {
     private static readonly DateTime StartTime = DateTime.UtcNow;
@@ -11,12 +10,18 @@ public class ApiStatusCheck : IHealthCheck
         CancellationToken cancellationToken = default)
     {
         var uptime = DateTime.UtcNow - StartTime;
+        var version = Environment.Version.ToString();
+
         var data = new Dictionary<string, object>
         {
+            ["runtime"] = $".NET {version}",
             ["uptime"] = uptime.ToString(@"hh\:mm\:ss"),
-            ["dotnetVersion"] = Environment.Version.ToString(),
-            ["startTime"] = StartTime.ToString("o")
+            ["startedAt"] = StartTime.ToString("o")
         };
-        return Task.FromResult(HealthCheckResult.Healthy("API operativa", data));
+
+        return Task.FromResult(
+            HealthCheckResult.Healthy(
+                description: $"API operativa — .NET {version}",
+                data: data));
     }
 }

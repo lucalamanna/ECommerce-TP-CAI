@@ -1,10 +1,15 @@
-var builder = WebApplication.CreateBuilder(args);
+using Notifications.API.Data;
+using Notifications.API.Extensions;
 
-// Servicios — completar con AddAppLogging, AddAppServices (Persona 2)
+var builder = WebApplication.CreateBuilder(args);
+builder.AddAppLogging();
+builder.Services.AddAppServices();
 
 var app = builder.Build();
 
-// Middleware — completar con UseAppMiddleware (Persona 2)
+using (var scope = app.Services.CreateScope())
+    scope.ServiceProvider.GetRequiredService<DatabaseInitializer>().Initialize();
+
+app.UseAppMiddleware();
 
 app.Run();
-

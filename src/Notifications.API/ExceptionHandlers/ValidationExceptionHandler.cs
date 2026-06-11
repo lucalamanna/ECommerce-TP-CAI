@@ -2,16 +2,12 @@
 using Notifications.API.Exceptions;
 
 namespace Notifications.API.ExceptionHandlers;
-
-public class ValidationExceptionHandler(ILogger<ValidationExceptionHandler> logger) : IExceptionHandler
+public class ValidationExceptionHandler : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(
-        HttpContext context, Exception exception, CancellationToken cancellationToken)
+    HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
         if (exception is not ValidationException ex) return false;
-
-        logger.LogWarning("Error de validacion. ErrorCode: {ErrorCode}, Message: {Message}",
-            ex.ErrorCode, ex.Message);
 
         var correlationId = context.Items["X-Correlation-Id"]?.ToString();
         if (correlationId != null)
@@ -23,11 +19,12 @@ public class ValidationExceptionHandler(ILogger<ValidationExceptionHandler> logg
             type = "https://tools.ietf.org/html/rfc7231#section-6.5.1",
             title = "Bad Request",
             status = 400,
-            detail = "Los datos enviados son invalidos.",
+            detail = "Los datos enviados son inválidos.",
             instance = context.Request.Path.Value,
             errorCode = ex.ErrorCode,
-            errorMessage = ex.Message
-        }, cancellationToken);
+            errorMessage = ex.Message,
+            correlationId
+        }, cancellationToken: cancellationToken);
         return true;
     }
 }
