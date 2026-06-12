@@ -98,7 +98,11 @@ namespace Orders.API.Services
 
             ValidarRequest(request);
 
-            var usersClient = _httpClientFactory.CreateClient("UsersApi");
+            var usersClient = _httpClientFactory.CreateClient("UsersApi"); 
+            
+            if (!string.IsNullOrWhiteSpace(correlationId))
+                usersClient.DefaultRequestHeaders.Add("X-Correlation-Id", correlationId);
+
             var userResponse = await usersClient.GetAsync($"/api/users?id={request.UsuarioId}");
 
             if (!userResponse.IsSuccessStatusCode)
