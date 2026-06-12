@@ -37,6 +37,7 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
 
         if (string.IsNullOrWhiteSpace(categoria))
             errores.Add("El campo 'Categoria' es requerido");
+
         if (errores.Count > 0)
         {
             var mensaje = "";
@@ -104,7 +105,8 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
 
         Product product = MapRow(row);
         logger.LogInformation("Producto encontrado. Id: {Id}, Nombre: {Nombre}",
-            product.Id.ToString(), product.Nombre.ToString()); return product;
+            product.Id.ToString(), product.Nombre.ToString());
+        return product;
     }
 
     public async Task<Product> CreateAsync(CreateProductRequest request)
@@ -154,13 +156,17 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
         return await GetByIdAsync(id);
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task DeleteAsync(Guid id, string? correlationId)
     {
         logger.LogInformation("Eliminando producto. Id: {Id}", id);
 
         await GetByIdAsync(id);
 
         var client = httpClientFactory.CreateClient("OrdersApi");
+
+        if (!string.IsNullOrWhiteSpace(correlationId))
+            client.DefaultRequestHeaders.Add("X-Correlation-Id", correlationId);
+
         var response = await client.GetAsync($"/api/orders?productoId={id}");
 
         if (response.IsSuccessStatusCode)
