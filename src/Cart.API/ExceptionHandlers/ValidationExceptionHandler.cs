@@ -26,7 +26,8 @@ public class ValidationExceptionHandler(ILogger<ValidationExceptionHandler> logg
             detail = "Los datos enviados son inválidos.",
             instance = context.Request.Path.Value,
             errorCode = ex.ErrorCode,
-            errorMessage = ex.Message
+            errorMessage = ex.Message,
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }
