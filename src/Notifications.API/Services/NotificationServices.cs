@@ -109,13 +109,16 @@ public class NotificationService( NotificationRepository repository, IHttpClient
         }
     }
 
-    private static NotificationResponse MapToResponse(Notification notification) => new()
+    private static NotificationResponse MapToResponse(Notification notification)
     {
-        Id = notification.Id,
-        UsuarioId = notification.UsuarioId,
-        Mensaje = notification.Mensaje,
-        Tipo = notification.Tipo,
-        Estado = notification.Estado,
-        FechaEnvio = notification.FechaEnvio
-    };
+        return new NotificationResponse
+        {
+            Id = notification.Id,
+            UsuarioId = notification.UsuarioId,
+            Mensaje = notification.Mensaje,
+            Tipo = notification.Tipo,
+            Estado = notification.Estado,
+            FechaEnvio = notification.FechaEnvio
+        };
+    }
 }
