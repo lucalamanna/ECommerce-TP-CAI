@@ -1,5 +1,4 @@
 ﻿using Notifications.API.DTOs;
-using Notifications.API.Models;
 using Notifications.API.Services;
 using Microsoft.OpenApi.Any;
 

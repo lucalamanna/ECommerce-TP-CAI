@@ -35,7 +35,8 @@ public class BusinessRuleExceptionHandler(ILogger<BusinessRuleExceptionHandler> 
             detail,
             instance = context.Request.Path.Value,
             errorCode = ex.ErrorCode,
-            errorMessage = ex.Message
+            errorMessage = ex.Message,
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }

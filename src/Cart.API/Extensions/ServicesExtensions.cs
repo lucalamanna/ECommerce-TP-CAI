@@ -20,6 +20,7 @@ public static class ServicesExtensions
         services.AddProblemDetails();
 
         services.AddSingleton<DatabaseInitializer>();
+        services.AddHttpContextAccessor();
         services.AddScoped<CartService>();
 
         services.AddHttpClient("ProductsApi", client =>

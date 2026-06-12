@@ -25,7 +25,8 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             detail = "Ocurrió un error interno.",
             instance = context.Request.Path.Value,
             errorCode = "NTF-004",
-            errorMessage = "Error interno al procesar la notificacion."
+            errorMessage = "Error interno al procesar la notificacion.",
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }

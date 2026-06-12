@@ -22,7 +22,8 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             detail = "Ocurrió un error interno.",
             instance = context.Request.Path.Value,
             errorCode = "CRT-005",
-            errorMessage = "Error interno al procesar el carrito."
+            errorMessage = "Error interno al procesar el carrito.",
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }

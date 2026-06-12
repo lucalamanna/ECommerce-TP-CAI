@@ -7,7 +7,6 @@ namespace Products.API.Controllers;
 
 public static class ProductsEndpoints
 {
-    // Ejemplos reutilizables
     private static readonly OpenApiObject EjemploProducto = new()
     {
         ["id"] = new OpenApiString("3fa85f64-5717-4562-b3fc-2c963f66afa6"),
@@ -184,9 +183,10 @@ public static class ProductsEndpoints
         });
 
         // DELETE /api/products/{id}
-        app.MapDelete("/api/products/{id}", async (ProductService service, Guid id) =>
+        app.MapDelete("/api/products/{id}", async (HttpContext http, ProductService service, Guid id) =>
         {
-            await service.DeleteAsync(id);
+            var correlationId = http.Items["X-Correlation-Id"]?.ToString();
+            await service.DeleteAsync(id, correlationId);
             return Results.NoContent();
         })
         .WithTags("Products")

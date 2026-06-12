@@ -5,18 +5,11 @@ using Orders.API.Models;
 
 namespace Orders.API.Services
 {
-    public class OrderService
+    public class OrderService (OrderRepository repository, IHttpClientFactory httpClientFactory, ILogger<OrderService> logger)
     {
-        private readonly OrderRepository _repository;
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<OrderService> _logger;
-
-        public OrderService (OrderRepository repository, IHttpClientFactory httpClientFactory, ILogger<OrderService> logger)
-        {
-            _repository = repository;
-            _httpClientFactory = httpClientFactory;
-            _logger = logger;
-        }
+        private readonly OrderRepository _repository = repository;
+        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+        private readonly ILogger<OrderService> _logger = logger;
        
         public async Task<IEnumerable<OrderResponse>> GetAllAsync(Guid? usuarioId, Guid? productoId = null)
         {
@@ -24,9 +17,16 @@ namespace Orders.API.Services
             
             var orders = await _repository.GetAllAsync(usuarioId, productoId);
 
-            _logger.LogInformation("Órdenes obtenidas. Cantidad: {Cantidad}", orders.Count());
+            var result = new List<OrderResponse>();
+          
+            foreach (var order in orders)
+            {
+                result.Add(MapToResponse(order));
+            }
 
-            return orders.Select(MapToResponse);
+            _logger.LogInformation("Órdenes obtenidas. Cantidad: {Cantidad}", result.Count);
+
+            return result; 
         }
        
         public async Task<OrderResponse> GetByIdAsync(Guid id)
@@ -98,7 +98,11 @@ namespace Orders.API.Services
 
             ValidarRequest(request);
 
-            var usersClient = _httpClientFactory.CreateClient("UsersApi");
+            var usersClient = _httpClientFactory.CreateClient("UsersApi"); 
+            
+            if (!string.IsNullOrWhiteSpace(correlationId))
+                usersClient.DefaultRequestHeaders.Add("X-Correlation-Id", correlationId);
+
             var userResponse = await usersClient.GetAsync($"/api/users?id={request.UsuarioId}");
 
             if (!userResponse.IsSuccessStatusCode)
@@ -191,16 +195,22 @@ namespace Orders.API.Services
 
         private static OrderResponse MapToResponse(Order order)
         {
-            return new OrderResponse
+            var items = new List<OrderItemResponse>();
+            foreach (var i in order.Items)
             {
-                Id = order.Id,
-                UsuarioId = order.UsuarioId,
-                Items = order.Items.Select(i => new OrderItemResponse
+                items.Add(new OrderItemResponse
                 {
                     ProductoId = i.ProductoId,
                     Cantidad = i.Cantidad,
                     PrecioUnitario = i.PrecioUnitario
-                }).ToList(),
+                });
+            }
+
+            return new OrderResponse
+            {
+                Id = order.Id,
+                UsuarioId = order.UsuarioId,
+                Items = items,   
                 Total = order.Total,
                 Estado = order.Estado,
                 FechaCreacion = order.FechaCreacion
@@ -214,10 +224,19 @@ namespace Orders.API.Services
             if (request.UsuarioId == Guid.Empty)
                 errores.Add("El campo 'UsuarioId' es requerido.");
 
-            if (request.Items == null || !request.Items.Any())
+            if (request.Items == null || request.Items.Count == 0)
                 errores.Add("La orden debe contener al menos un item.");
-            else if (request.Items.Any(i => i.Cantidad <= 0))
-                errores.Add("La cantidad de cada item debe ser mayor a 0.");
+            else
+            {
+                foreach (var item in request.Items)
+                {
+                    if (item.Cantidad <= 0)
+                    {
+                        errores.Add("La cantidad de cada item debe ser mayor a cero.");
+                        break;
+                    }
+                }
+            }
 
             if (errores.Count > 0)
                 throw new ValidationException("ORD-002", string.Join("; ", errores));
