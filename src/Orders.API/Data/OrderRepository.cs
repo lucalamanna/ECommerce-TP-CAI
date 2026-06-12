@@ -32,14 +32,19 @@ public class OrderRepository
             """, new { UsuarioId = usuarioId?.ToString(), 
                 ProductoId = productoId?.ToString() });
 
-        var orders = rows.Select(row => new Order
+        var orders = new List<Order>();
+        
+        foreach (var row in rows)
         {
-            Id = Guid.Parse((string)row.Id),
-            UsuarioId = Guid.Parse((string)row.UsuarioId),
-            Total = (decimal)(double)row.Total,
-            Estado = (string)row.Estado,
-            FechaCreacion = DateTime.Parse((string)row.FechaCreacion, CultureInfo.InvariantCulture)
-        }).ToList();
+            orders.Add(new Order
+            {
+                Id = Guid.Parse((string)row.Id),
+                UsuarioId = Guid.Parse((string)row.UsuarioId),
+                Total = (decimal)(double)row.Total,
+                Estado = (string)row.Estado,
+                FechaCreacion = DateTime.Parse((string)row.FechaCreacion, CultureInfo.InvariantCulture)
+            });
+        }
 
         foreach (var order in orders)
         {

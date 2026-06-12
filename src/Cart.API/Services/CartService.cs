@@ -5,7 +5,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Cart.API.Services;
 
-public class CartService(IConfiguration config, IHttpClientFactory httpClientFactory)
+public class CartService(IConfiguration config, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
 {
     private SqliteConnection CreateConnection()
     {
@@ -29,15 +29,21 @@ public class CartService(IConfiguration config, IHttpClientFactory httpClientFac
             "SELECT producto_id AS ProductoId, cantidad AS Cantidad FROM cart_items WHERE usuario_id = @userId",
             new { userId = userId.ToString() });
 
+        var itemList = new List<CartItemResponse>();
+        foreach (var i in items)
+        {
+            itemList.Add(new CartItemResponse
+            {
+                ProductoId = Guid.Parse((string)i.ProductoId),
+                Cantidad = (int)(long)i.Cantidad
+            });
+        }
+
         return new CartResponse
         {
             UsuarioId = Guid.Parse((string)cart.UsuarioId),
             FechaActualizacion = DateTime.Parse((string)cart.FechaActualizacion, null, System.Globalization.DateTimeStyles.RoundtripKind),
-            Items = items.Select(i => new CartItemResponse
-            {
-                ProductoId = Guid.Parse((string)i.ProductoId),
-                Cantidad = (int)(long)i.Cantidad
-            }).ToList()
+            Items = itemList
         };
     }
 
@@ -166,6 +172,11 @@ public class CartService(IConfiguration config, IHttpClientFactory httpClientFac
     private async Task<ProductDto?> GetProductAsync(Guid productId)
     {
         var client = httpClientFactory.CreateClient("ProductsApi");
+
+        var correlationId = httpContextAccessor.HttpContext?.Items["X-Correlation-Id"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(correlationId))
+            client.DefaultRequestHeaders.TryAddWithoutValidation("X-Correlation-Id", correlationId);
+
         var response = await client.GetAsync($"/api/products/{productId}");
 
         if (!response.IsSuccessStatusCode)
