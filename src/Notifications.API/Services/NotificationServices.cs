@@ -59,12 +59,16 @@ public class NotificationService( NotificationRepository repository, IHttpClient
                 usuarioId);
             throw new NotFoundException("NTF-003", "No se encontraron notificaciones para el usuario.");
         }
+        
+        var result = new List<NotificationResponse>();
+        foreach (var notification in notifications)
+        {
+            result.Add(MapToResponse(notification));
+        }
+        _logger.LogInformation("Notificaciones obtenidas. Cantidad: {Cantidad}", result.Count);
 
-        _logger.LogInformation("Notificaciones obtenidas. Cantidad: {Cantidad}", notifications.Count());
-
-        return notifications.Select(MapToResponse);
+        return result;
     }
-
     private static void ValidarRequest(SendNotificationRequest request)
     {
         var errores = new List<string>();
