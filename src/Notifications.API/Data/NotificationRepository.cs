@@ -44,15 +44,20 @@ public class NotificationRepository(IConfiguration config)
         ORDER BY fecha_envio DESC
         """, new { UsuarioId = usuarioId.ToString() });
 
-        return rows.Select(row => new Notification
+        var notifications = new List<Notification>();
+        foreach (var row in rows)
         {
-            Id = Guid.Parse((string)row.Id),
-            UsuarioId = Guid.Parse((string)row.UsuarioId),
-            Mensaje = (string)row.Mensaje,
-            Tipo = (string)row.Tipo,
-            Estado = (string)row.Estado,
-            FechaEnvio = DateTime.Parse((string)row.FechaEnvio, CultureInfo.InvariantCulture)
-        }).ToList();
+            notifications.Add(new Notification
+            {
+                Id = Guid.Parse((string)row.Id),
+                UsuarioId = Guid.Parse((string)row.UsuarioId),
+                Mensaje = (string)row.Mensaje,
+                Tipo = (string)row.Tipo,
+                Estado = (string)row.Estado,
+                FechaEnvio = DateTime.Parse((string)row.FechaEnvio, CultureInfo.InvariantCulture)
+            });
+        }
+        return notifications;
     }
 
     private async Task<Notification?> GetByIdAsync(Guid id)
