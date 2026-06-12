@@ -5,11 +5,12 @@ using Notifications.API.Models;
 
 namespace Notifications.API.Services;
 
-public class NotificationService( NotificationRepository repository, IHttpClientFactory httpClientFactory, ILogger<NotificationService> logger)
+public class NotificationService( NotificationRepository repository, IHttpClientFactory httpClientFactory, ILogger<NotificationService> logger, INotificationSender sender)
 {
     private readonly NotificationRepository _repository = repository;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly ILogger<NotificationService> _logger = logger;
+    private readonly INotificationSender _sender = sender;
 
     private static readonly string[] TiposValidos = ["Email", "Push", "SMS"];
 
@@ -40,6 +41,7 @@ public class NotificationService( NotificationRepository repository, IHttpClient
         };
 
         var created = await _repository.CreateAsync(notification);
+        await _sender.SendAsync(created.Tipo, created.UsuarioId, created.Mensaje);
 
         _logger.LogInformation("Notificación enviada. Id: {Id}, UsuarioId: {UsuarioId}",
             created.Id, created.UsuarioId);
