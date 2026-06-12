@@ -26,7 +26,8 @@ public class NotFoundExceptionHandler(ILogger<NotFoundExceptionHandler> logger) 
             detail = "El recurso solicitado no fue encontrado.",
             instance = context.Request.Path.Value,
             errorCode = ex.ErrorCode,
-            errorMessage = ex.Message
+            errorMessage = ex.Message,
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }
