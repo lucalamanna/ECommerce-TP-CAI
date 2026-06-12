@@ -5,7 +5,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Cart.API.Services;
 
-public class CartService(IConfiguration config, IHttpClientFactory httpClientFactory)
+public class CartService(IConfiguration config, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
 {
     private SqliteConnection CreateConnection()
     {
@@ -172,6 +172,11 @@ public class CartService(IConfiguration config, IHttpClientFactory httpClientFac
     private async Task<ProductDto?> GetProductAsync(Guid productId)
     {
         var client = httpClientFactory.CreateClient("ProductsApi");
+
+        var correlationId = httpContextAccessor.HttpContext?.Items["X-Correlation-Id"]?.ToString();
+        if (!string.IsNullOrWhiteSpace(correlationId))
+            client.DefaultRequestHeaders.TryAddWithoutValidation("X-Correlation-Id", correlationId);
+
         var response = await client.GetAsync($"/api/products/{productId}");
 
         if (!response.IsSuccessStatusCode)
