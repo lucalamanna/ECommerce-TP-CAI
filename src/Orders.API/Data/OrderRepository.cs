@@ -53,14 +53,19 @@ public class OrderRepository
                precio_unitario AS PrecioUnitario
             FROM order_items
             WHERE order_id = @OrderId
-            """, new { OrderId = order.Id.ToString() })).ToList();
+            """, new { OrderId = order.Id.ToString() }));
 
-            order.Items = itemRows.Select(row => new OrderItem
+            var orderItems = new List<OrderItem>();
+            foreach (var row in itemRows)
             {
-                ProductoId = Guid.Parse((string)row.ProductoId),
-                Cantidad = (int)(long)row.Cantidad,
-                PrecioUnitario = (decimal)(double)row.PrecioUnitario
-            }).ToList();
+                orderItems.Add(new OrderItem
+                {
+                    ProductoId = Guid.Parse((string)row.ProductoId),
+                    Cantidad = (int)(long)row.Cantidad,
+                    PrecioUnitario = (decimal)(double)row.PrecioUnitario
+                });
+            }
+            order.Items = orderItems;
         }
          
         return orders;
@@ -86,8 +91,7 @@ public class OrderRepository
             UsuarioId = Guid.Parse((string)row.UsuarioId),
             Total = (decimal)(double)row.Total,
             Estado = (string)row.Estado,
-            FechaCreacion = DateTime.Parse((string)row.FechaCreacion,
-                            CultureInfo.InvariantCulture)
+            FechaCreacion = DateTime.Parse((string)row.FechaCreacion, CultureInfo.InvariantCulture)
         };
 
         var itemRows = await conn.QueryAsync<dynamic>("""
@@ -97,12 +101,17 @@ public class OrderRepository
         WHERE order_id = @OrderId
         """, new { OrderId = order.Id.ToString() });
 
-        order.Items = itemRows.Select(row => new OrderItem
+        var orderItems = new List<OrderItem>();
+        foreach (var itemRow in itemRows)
         {
-            ProductoId = Guid.Parse((string)row.ProductoId),
-            Cantidad = (int)(long)row.Cantidad,
-            PrecioUnitario = (decimal)(double)row.PrecioUnitario
-        }).ToList();
+            orderItems.Add(new OrderItem
+            {
+                ProductoId = Guid.Parse((string)itemRow.ProductoId),
+                Cantidad = (int)(long)itemRow.Cantidad,
+                PrecioUnitario = (decimal)(double)itemRow.PrecioUnitario
+            });
+        }
+        order.Items = orderItems;
 
         return order;
     }

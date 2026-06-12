@@ -58,17 +58,25 @@ namespace Orders.API.Services
                 _logger.LogWarning("Orden no encontrada. ErrorCode: ORD-001, Id: {Id}", id);
                 throw new NotFoundException("ORD-001", "Orden no encontrada.");
             }
-               
 
-            var esValida = (order.Estado, request.Estado) switch
+
+            bool esValida;
+
+            switch (order.Estado)
             {
-                ("Pendiente", "Confirmada") => true,
-                ("Pendiente", "Cancelada") => true,
-                ("Confirmada", "Enviada") => true,
-                ("Confirmada", "Cancelada") => true,
-                ("Enviada", "Entregada") => true,
-                _ => false
-            };
+                case "Pendiente":
+                    esValida = request.Estado == "Confirmada" || request.Estado == "Cancelada";
+                    break;
+                case "Confirmada":
+                    esValida = request.Estado == "Enviada" || request.Estado == "Cancelada";
+                    break;
+                case "Enviada":
+                    esValida = request.Estado == "Entregada";
+                    break;
+                default:
+                    esValida = false;
+                    break;
+            }
 
             if (!esValida)
             {
@@ -239,7 +247,15 @@ namespace Orders.API.Services
             }
 
             if (errores.Count > 0)
-                throw new ValidationException("ORD-002", string.Join("; ", errores));
+            {
+                var mensaje = "";
+                for (int i = 0; i < errores.Count; i++)
+                {
+                    if (i > 0) mensaje += "; ";
+                    mensaje += errores[i];
+                }
+                throw new ValidationException("ORD-002", mensaje);
+            }
         }
 
 
