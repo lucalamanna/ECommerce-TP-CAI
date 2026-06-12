@@ -1,5 +1,4 @@
-﻿namespace Orders.API.DTOs
-{
+﻿namespace Orders.API.DTOs;
     /// <summary>Representación de una orden.</summary>
     public class OrderResponse
     {
@@ -26,4 +25,4 @@
         /// <example>2026-05-29T14:32:10Z</example>
         public DateTime FechaCreacion { get; set; }
     }
-}
+

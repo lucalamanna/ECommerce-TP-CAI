@@ -5,18 +5,11 @@ using Orders.API.Models;
 
 namespace Orders.API.Services
 {
-    public class OrderService
+    public class OrderService (OrderRepository repository, IHttpClientFactory httpClientFactory, ILogger<OrderService> logger)
     {
-        private readonly OrderRepository _repository;
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly ILogger<OrderService> _logger;
-
-        public OrderService (OrderRepository repository, IHttpClientFactory httpClientFactory, ILogger<OrderService> logger)
-        {
-            _repository = repository;
-            _httpClientFactory = httpClientFactory;
-            _logger = logger;
-        }
+        private readonly OrderRepository _repository = repository;
+        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+        private readonly ILogger<OrderService> _logger = logger;
        
         public async Task<IEnumerable<OrderResponse>> GetAllAsync(Guid? usuarioId, Guid? productoId = null)
         {

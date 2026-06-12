@@ -1,5 +1,5 @@
-﻿namespace Orders.API.DTOs
-{
+﻿namespace Orders.API.DTOs;
+
     /// <summary>Producto y cantidad dentro de una orden a crear.</summary>
     public class CreateOrderItemRequest
     {
@@ -11,4 +11,4 @@
         /// <example>2</example>
         public int Cantidad { get; set; }
     }
-}
+

@@ -1,34 +1,33 @@
 ﻿using Microsoft.AspNetCore.Diagnostics;
 using Orders.API.Exceptions;
 
-namespace Orders.API.ExceptionHandlers
-{
-    public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
-    {     
-        public async ValueTask<bool> TryHandleAsync(
-        HttpContext context, Exception exception, CancellationToken cancellationToken)
-        {
-            var correlationId = context.Items["X-Correlation-Id"]?.ToString();
-                     
-            logger.LogError(exception, "Error inesperado. {ErrorCode}", "ORD-007");
-            
-            if (correlationId != null)                                         
-                context.Response.Headers["x-correlation-id"] = correlationId;
-            context.Response.StatusCode = 500;
-            
-            await context.Response.WriteAsJsonAsync(new
-            {
-                type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
-                title = "Internal Server Error",
-                status = 500,
-                detail = "Ocurrió un error inesperado.",
-                instance = context.Request.Path.Value,
-                errorCode = "ORD-007",
-                errorMessage = "Error interno al procesar la orden.",
-                correlationId
-            }, cancellationToken: cancellationToken);
+namespace Orders.API.ExceptionHandlers;
 
-            return true;
-        }
+public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
+{     
+    public async ValueTask<bool> TryHandleAsync(
+    HttpContext context, Exception exception, CancellationToken cancellationToken)
+    {
+        var correlationId = context.Items["X-Correlation-Id"]?.ToString();
+                 
+        logger.LogError(exception, "Error inesperado. {ErrorCode}", "ORD-007");
+        
+        if (correlationId != null)                                         
+            context.Response.Headers["x-correlation-id"] = correlationId;
+        context.Response.StatusCode = 500;
+        
+        await context.Response.WriteAsJsonAsync(new
+        {
+            type = "https://tools.ietf.org/html/rfc7231#section-6.6.1",
+            title = "Internal Server Error",
+            status = 500,
+            detail = "Ocurrió un error inesperado.",
+            instance = context.Request.Path.Value,
+            errorCode = "ORD-007",
+            errorMessage = "Error interno al procesar la orden.",
+            correlationId
+        }, cancellationToken: cancellationToken);
+
+        return true;
     }
 }
