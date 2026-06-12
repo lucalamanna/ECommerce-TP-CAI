@@ -22,6 +22,7 @@ public class CorrelationIdMiddleware
         context.Response.Headers[CorrelationIdHeader] = correlationId;
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
+        using (LogContext.PushProperty("Endpoint", context.Request.Path.Value))
         {
             await _next(context);
         }
