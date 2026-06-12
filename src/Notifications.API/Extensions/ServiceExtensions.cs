@@ -22,6 +22,8 @@ public static class ServiceExtensions
         services.AddScoped<NotificationRepository>();
         services.AddScoped<NotificationService>();
 
+        services.AddScoped<INotificationSender, DummyNotificationSender>();
+
         services.AddHttpClient("UsersApi", client =>
         {
             client.BaseAddress = new Uri("http://localhost:5200");
