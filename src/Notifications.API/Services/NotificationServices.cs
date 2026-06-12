@@ -22,6 +22,8 @@ public class NotificationService( NotificationRepository repository, IHttpClient
         ValidarRequest(request);
 
         var usersClient = _httpClientFactory.CreateClient("UsersApi");
+        if (!string.IsNullOrWhiteSpace(correlationId))
+            usersClient.DefaultRequestHeaders.Add("X-Correlation-Id", correlationId);
         var userResponse = await usersClient.GetAsync($"/api/users?id={request.UsuarioId}");
 
         if (!userResponse.IsSuccessStatusCode)
@@ -55,18 +57,19 @@ public class NotificationService( NotificationRepository repository, IHttpClient
 
         var notifications = await _repository.GetByUserIdAsync(usuarioId);
 
-        if (!notifications.Any())
-        {
-            _logger.LogWarning("No se encontraron notificaciones. ErrorCode: NTF-003, UsuarioId: {UsuarioId}",
-                usuarioId);
-            throw new NotFoundException("NTF-003", "No se encontraron notificaciones para el usuario.");
-        }
-        
         var result = new List<NotificationResponse>();
         foreach (var notification in notifications)
         {
             result.Add(MapToResponse(notification));
         }
+
+        if (result.Count == 0)
+        {
+            _logger.LogWarning("No se encontraron notificaciones. ErrorCode: NTF-003, UsuarioId: {UsuarioId}",
+                usuarioId);
+            throw new NotFoundException("NTF-003", "No se encontraron notificaciones para el usuario.");
+        }
+
         _logger.LogInformation("Notificaciones obtenidas. Cantidad: {Cantidad}", result.Count);
 
         return result;
@@ -81,11 +84,29 @@ public class NotificationService( NotificationRepository repository, IHttpClient
         if (string.IsNullOrWhiteSpace(request.Mensaje))
             errores.Add("El campo 'Mensaje' es requerido.");
 
-        if (string.IsNullOrWhiteSpace(request.Tipo) || !TiposValidos.Contains(request.Tipo))
-            errores.Add($"El campo 'Tipo' debe ser uno de: {string.Join(", ", TiposValidos)}.");
+        var tipoValido = false;
+        for (int i = 0; i < TiposValidos.Length; i++)
+        {
+            if (TiposValidos[i] == request.Tipo)
+            {
+                tipoValido = true;
+                break;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Tipo) || !tipoValido)
+            errores.Add("El campo 'Tipo' debe ser uno de: Email, Push, SMS.");
 
         if (errores.Count > 0)
-            throw new ValidationException("NTF-002", string.Join("; ", errores));
+        {
+            var mensaje = "";
+            for (int i = 0; i < errores.Count; i++)
+            {
+                if (i > 0) mensaje += "; ";
+                mensaje += errores[i];
+            }
+            throw new ValidationException("NTF-002", mensaje);
+        }
     }
 
     private static NotificationResponse MapToResponse(Notification notification) => new()
