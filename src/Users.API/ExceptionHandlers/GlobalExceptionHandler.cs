@@ -22,7 +22,8 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             detail = "Ocurrió un error inesperado.",
             instance = context.Request.Path.Value,
             errorCode = "USR-006",
-            errorMessage = "Error interno al procesar el usuario."
+            errorMessage = "Error interno al procesar el usuario.",
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }
