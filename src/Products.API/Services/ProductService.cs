@@ -37,21 +37,31 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
 
         if (string.IsNullOrWhiteSpace(categoria))
             errores.Add("El campo 'Categoria' es requerido");
-
         if (errores.Count > 0)
-            throw new ValidationException("PRD-002", string.Join("; ", errores));
+        {
+            var mensaje = "";
+            for (int i = 0; i < errores.Count; i++)
+            {
+                if (i > 0) mensaje += "; ";
+                mensaje += errores[i];
+            }
+            throw new ValidationException("PRD-002", mensaje);
+        }
     }
 
-    private static Product MapRow(dynamic row) => new()
+    private static Product MapRow(dynamic row)
     {
-        Id = Guid.Parse((string)row.Id),
-        Nombre = (string)row.Nombre,
-        Descripcion = (string?)row.Descripcion,
-        Precio = (decimal)(double)row.Precio,
-        Stock = (int)(long)row.Stock,
-        Categoria = (string)row.Categoria,
-        FechaCreacion = DateTime.Parse((string)row.FechaCreacion, null, System.Globalization.DateTimeStyles.RoundtripKind)
-    };
+        return new Product
+        {
+            Id = Guid.Parse((string)row.Id),
+            Nombre = (string)row.Nombre,
+            Descripcion = (string?)row.Descripcion,
+            Precio = (decimal)(double)row.Precio,
+            Stock = (int)(long)row.Stock,
+            Categoria = (string)row.Categoria,
+            FechaCreacion = DateTime.Parse((string)row.FechaCreacion, null, System.Globalization.DateTimeStyles.RoundtripKind)
+        };
+    }
 
     private const string SelectColumns =
         "SELECT id AS Id, nombre AS Nombre, descripcion AS Descripcion, " +
@@ -68,7 +78,11 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
         if (!string.IsNullOrEmpty(nombre)) sql += " AND nombre LIKE @nombre";
         var rows = await conn.QueryAsync<dynamic>(sql, new { categoria, nombre = $"%{nombre}%" });
 
-        var products = rows.Select(MapRow).ToList();
+        var products = new List<Product>();
+        foreach (var row in rows)
+        {
+            products.Add(MapRow(row));
+        }
         logger.LogInformation("Productos obtenidos. Cantidad: {Cantidad}", (int)products.Count);
         return products;
     }
@@ -152,11 +166,17 @@ public class ProductService(IConfiguration config, IHttpClientFactory httpClient
         if (response.IsSuccessStatusCode)
         {
             var orders = await response.Content.ReadFromJsonAsync<IEnumerable<OrderSummary>>();
-            var ordenesActivas = orders?.Where(o =>
-                o.Estado == "Pendiente" ||
-                o.Estado == "Confirmada").ToList();
+            var ordenesActivas = new List<OrderSummary>();
+            if (orders != null)
+            {
+                foreach (var o in orders)
+                {
+                    if (o.Estado == "Pendiente" || o.Estado == "Confirmada")
+                        ordenesActivas.Add(o);
+                }
+            }
 
-            if (ordenesActivas != null && ordenesActivas.Any())
+            if (ordenesActivas.Count > 0)
             {
                 logger.LogWarning("Producto con órdenes activas. ErrorCode: {ErrorCode}, Id: {Id}", "PRD-004", id);
                 throw new BusinessRuleException("PRD-004",
