@@ -17,6 +17,10 @@ namespace Notifications.API.Services
             ValidarRequest(request);
 
             var usersClient = httpClientFactory.CreateClient("UsersApi");
+
+            if (!string.IsNullOrWhiteSpace(correlationId))
+                usersClient.DefaultRequestHeaders.Add("X-Correlation-Id", correlationId);
+
             var userResponse = await usersClient.GetAsync($"/api/users?id={request.UsuarioId}");
 
             if (!userResponse.IsSuccessStatusCode)
