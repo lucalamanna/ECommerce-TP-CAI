@@ -29,15 +29,21 @@ public class CartService(IConfiguration config, IHttpClientFactory httpClientFac
             "SELECT producto_id AS ProductoId, cantidad AS Cantidad FROM cart_items WHERE usuario_id = @userId",
             new { userId = userId.ToString() });
 
+        var itemList = new List<CartItemResponse>();
+        foreach (var i in items)
+        {
+            itemList.Add(new CartItemResponse
+            {
+                ProductoId = Guid.Parse((string)i.ProductoId),
+                Cantidad = (int)(long)i.Cantidad
+            });
+        }
+
         return new CartResponse
         {
             UsuarioId = Guid.Parse((string)cart.UsuarioId),
             FechaActualizacion = DateTime.Parse((string)cart.FechaActualizacion, null, System.Globalization.DateTimeStyles.RoundtripKind),
-            Items = items.Select(i => new CartItemResponse
-            {
-                ProductoId = Guid.Parse((string)i.ProductoId),
-                Cantidad = (int)(long)i.Cantidad
-            }).ToList()
+            Items = itemList
         };
     }
 
