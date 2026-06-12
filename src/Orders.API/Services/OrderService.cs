@@ -17,9 +17,16 @@ namespace Orders.API.Services
             
             var orders = await _repository.GetAllAsync(usuarioId, productoId);
 
-            _logger.LogInformation("Órdenes obtenidas. Cantidad: {Cantidad}", orders.Count());
+            var result = new List<OrderResponse>();
+          
+            foreach (var order in orders)
+            {
+                result.Add(MapToResponse(order));
+            }
 
-            return orders.Select(MapToResponse);
+            _logger.LogInformation("Órdenes obtenidas. Cantidad: {Cantidad}", result.Count);
+
+            return result; 
         }
        
         public async Task<OrderResponse> GetByIdAsync(Guid id)
@@ -184,16 +191,22 @@ namespace Orders.API.Services
 
         private static OrderResponse MapToResponse(Order order)
         {
-            return new OrderResponse
+            var items = new List<OrderItemResponse>();
+            foreach (var i in order.Items)
             {
-                Id = order.Id,
-                UsuarioId = order.UsuarioId,
-                Items = order.Items.Select(i => new OrderItemResponse
+                items.Add(new OrderItemResponse
                 {
                     ProductoId = i.ProductoId,
                     Cantidad = i.Cantidad,
                     PrecioUnitario = i.PrecioUnitario
-                }).ToList(),
+                });
+            }
+
+            return new OrderResponse
+            {
+                Id = order.Id,
+                UsuarioId = order.UsuarioId,
+                Items = items,   
                 Total = order.Total,
                 Estado = order.Estado,
                 FechaCreacion = order.FechaCreacion
@@ -207,10 +220,19 @@ namespace Orders.API.Services
             if (request.UsuarioId == Guid.Empty)
                 errores.Add("El campo 'UsuarioId' es requerido.");
 
-            if (request.Items == null || !request.Items.Any())
+            if (request.Items == null || request.Items.Count == 0)
                 errores.Add("La orden debe contener al menos un item.");
-            else if (request.Items.Any(i => i.Cantidad <= 0))
-                errores.Add("La cantidad de cada item debe ser mayor a 0.");
+            else
+            {
+                foreach (var item in request.Items)
+                {
+                    if (item.Cantidad <= 0)
+                    {
+                        errores.Add("La cantidad de cada item debe ser mayor a cero.");
+                        break;
+                    }
+                }
+            }
 
             if (errores.Count > 0)
                 throw new ValidationException("ORD-002", string.Join("; ", errores));
