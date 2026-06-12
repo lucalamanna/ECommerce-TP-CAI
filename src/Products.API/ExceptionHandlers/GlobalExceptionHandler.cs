@@ -25,7 +25,8 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             detail = "Ocurrió un error interno.",
             instance = context.Request.Path.Value,
             errorCode = "PRD-005",
-            errorMessage = "Error interno al procesar el producto."
+            errorMessage = "Error interno al procesar el producto.",
+            correlationId
         }, cancellationToken: cancellationToken);
         return true;
     }
