@@ -15,6 +15,7 @@ public static class ServiceExtensions
 
         services.AddExceptionHandler<NotFoundExceptionHandler>();
         services.AddExceptionHandler<ValidationExceptionHandler>();
+        services.AddExceptionHandler<BadHttpRequestExceptionHandler>();
         services.AddExceptionHandler<GlobalExceptionHandler>();
         services.AddProblemDetails();
 
