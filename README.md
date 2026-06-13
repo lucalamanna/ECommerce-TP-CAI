@@ -6,6 +6,9 @@ Alumnos: Daiana Nuñez, Agustin Garcia de la Mata, Luca Lamanna
 
 Año: 2026
 
+Link de acceso al documento con capturas del Swagger: https://docs.google.com/document/d/1_8PQoWXogTb_jkADGHIGIXQGdRr83zIWVPxLYlstDT0/edit?usp=sharing
+
+
 Este TP implementa un e-commerce con 5 microservicios en C# / .NET 8. Cada servicio expone su propia API REST y tiene su propia base de datos SQLite.
 
 ## Arquitectura
