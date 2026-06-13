@@ -49,6 +49,11 @@ namespace Orders.API.Services
       
         public async Task<UpdateOrderStatusResponse> UpdateStatusAsync(Guid id, UpdateOrderStatusRequest request)
         {
+            if (string.IsNullOrWhiteSpace(request.Estado))
+            {
+                _logger.LogWarning("Estado inválido. ErrorCode: {ErrorCode}", "ORD-002");
+                throw new ValidationException("ORD-002", "El campo 'Estado' es requerido.");
+            }
             _logger.LogInformation("Actualizando estado. Id: {Id}, Estado: {Estado}", id, request.Estado);
             
             var order = await _repository.GetByIdAsync(id);
@@ -105,7 +110,15 @@ namespace Orders.API.Services
             request.UsuarioId, request.Items?.Count ?? 0);
 
             ValidarRequest(request);
-
+            
+            var existePendiente = await _repository.ExistePendienteAsync(request.UsuarioId);
+            if (existePendiente)
+            {
+                _logger.LogWarning("Orden duplicada. ErrorCode: {ErrorCode}, UsuarioId: {UsuarioId}",
+                    "ORD-009", request.UsuarioId);
+                throw new BusinessRuleException("ORD-009",
+                    $"El usuario ya tiene una orden en estado Pendiente.");
+            }
             var usersClient = _httpClientFactory.CreateClient("UsersApi"); 
             
             if (!string.IsNullOrWhiteSpace(correlationId))

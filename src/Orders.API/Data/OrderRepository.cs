@@ -207,4 +207,13 @@ public class OrderRepository
         }
 
     }
+    public async Task<bool> ExistePendienteAsync(Guid usuarioId)
+    {
+        using var conn = CreateConnection();
+        var count = await conn.QueryFirstOrDefaultAsync<int>("""
+        SELECT COUNT(1) FROM orders
+        WHERE usuario_id = @UsuarioId AND estado = 'Pendiente'
+        """, new { UsuarioId = usuarioId.ToString() });
+        return count > 0;
+    }
 }

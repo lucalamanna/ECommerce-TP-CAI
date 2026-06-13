@@ -115,6 +115,7 @@ public static class OrdersEndpoints
         .Produces<OrderResponse>(201)
         .Produces<ErrorResponse>(400)
         .Produces<ErrorResponse>(404)
+        .Produces<ErrorResponse>(409)
         .Produces<ErrorResponse>(422)
         .Produces<ErrorResponse>(500)
         .WithOpenApi(op =>
@@ -134,6 +135,13 @@ public static class OrdersEndpoints
                 "El recurso solicitado no fue encontrado.",
                 "/api/orders", "ORD-004",
                 "Producto '00000000-0000-0000-0000-000000000001' no encontrado.");
+            op.Responses["409"].Description = "El usuario ya tiene una orden pendiente (ORD-009)";
+            op.Responses["409"].Content["application/json"].Example = ErrorORD(
+                "https://tools.ietf.org/html/rfc7231#section-6.5.9",
+                "Conflict", 409,
+                "Ya existe un recurso con esos datos.",
+                "/api/orders", "ORD-009",
+                "El usuario ya tiene una orden en estado Pendiente.");
             op.Responses["422"].Description = "Stock insuficiente (ORD-005)";
             op.Responses["422"].Content["application/json"].Example = ErrorORD(
                 "https://tools.ietf.org/html/rfc4918#section-11.2",
@@ -160,6 +168,7 @@ public static class OrdersEndpoints
         .WithSummary("Actualizar estado de orden")
         .WithDescription("Actualiza el estado de una orden. Transiciones válidas: Pendiente→Confirmada, Pendiente→Cancelada, Confirmada→Enviada, Confirmada→Cancelada, Enviada→Entregada.")
         .Produces<UpdateOrderStatusResponse>(200)
+        .Produces<ErrorResponse>(400)
         .Produces<ErrorResponse>(404)
         .Produces<ErrorResponse>(409)        
         .Produces<ErrorResponse>(500)
@@ -167,6 +176,13 @@ public static class OrdersEndpoints
         {
             op.Responses["200"].Description = "Estado actualizado exitosamente";
             op.Responses["200"].Content["application/json"].Example = EjemploUpdateStatus;
+            op.Responses["400"].Description = "Datos inválidos (ORD-002)";
+            op.Responses["400"].Content["application/json"].Example = ErrorORD(
+                "https://tools.ietf.org/html/rfc7231#section-6.5.1",
+                "Bad Request", 400,
+                "Los datos enviados son inválidos.",
+                "/api/orders/f1e2d3c4-0000-0000-0000-aabbccddeeff/status",
+                "ORD-002", "Los datos de la orden son inválidos.");
             op.Responses["404"].Description = "Orden no encontrada (ORD-001)";
             op.Responses["404"].Content["application/json"].Example = ErrorORD(
                 "https://tools.ietf.org/html/rfc7231#section-6.5.4",
