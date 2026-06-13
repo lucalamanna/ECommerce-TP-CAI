@@ -115,6 +115,7 @@ public static class OrdersEndpoints
         .Produces<OrderResponse>(201)
         .Produces<ErrorResponse>(400)
         .Produces<ErrorResponse>(404)
+        .Produces<ErrorResponse>(409)
         .Produces<ErrorResponse>(422)
         .Produces<ErrorResponse>(500)
         .WithOpenApi(op =>
