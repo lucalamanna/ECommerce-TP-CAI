@@ -47,7 +47,7 @@ public class BadRequestExceptionHandler(ILogger<BadRequestExceptionHandler> logg
         if (ex.InnerException is System.Text.Json.JsonException)
             return "El cuerpo de la solicitud contiene JSON inválido";
 
-        return "Los datos del producto son inválidos";
+        return "Los DATOS del producto son inválidos";
     }
 
     private static string CapitalizarPrimera(string s) =>
